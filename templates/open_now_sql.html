@@ -1,0 +1,292 @@
+{% extends 'index.html' %} {% load staticfiles %} {% load user_tags %} {% block content %}
+
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <!-- <script src="http://d3js.org/d3.v3.min.js" language="JavaScript"></script> -->
+    <!-- <script src="liquidFillGauge.js" language="JavaScript"></script> -->
+    <script type="text/javascript" src="{% static 'js/d3.v3.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/liquidFillGauge.js' %}"></script>
+    <style>
+        .liquidFillGaugeText { font-family: Helvetica; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<style>
+
+.outer {
+    text-align:center;
+
+}
+.inner {
+
+    width: 18%; 
+    /*height:200px;*/
+    display:inline-block;
+    vertical-align: middle;
+}
+
+.svg {
+    vertical-align: middle;
+    display:inline-block;
+    text-align:center;
+    /*width: 100%;*/
+}
+
+
+p.rg{
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 25px;
+}
+
+p.label {
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 30px;
+}
+
+p.limit{
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 20px;
+}
+
+p.min_value{
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 15px;
+}
+
+p.max_value{
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 15px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.wrap {
+    width: 95%;
+    margin: 20px auto;
+    /*text-align:center;*/
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
+.clearfix {
+    clear: both;
+}
+
+.item {
+    /*background: pink;*/
+    margin: 10px 0;
+    padding: 10px;
+    /*border: 1px solid black;*/
+    text-align:center;
+}
+
+.box {
+    margin-bottom: 40px;
+    border: 1px solid blue;
+    border-radius: 30px;
+}
+
+.list {
+    width: 45%;
+    padding: 20px;
+    /*background: blue;*/
+    /*border: 1px solid blue;*/
+}
+
+.item:nth-child(1) {
+    margin: 0;
+}
+
+
+</style>
+
+<script>
+
+    var gauges_new = [];
+    var gauges_repeat = [];
+
+    function NewValue() {
+        if(Math.random() > .5) {
+            return Math.round(Math.random()*100);
+        } else {
+            return (Math.random()*100).toFixed(1);
+        }
+    }
+
+    // set max height
+    $(".box").each(function(i, val) {
+        left_height = $(this).find(".list.left").height();
+        right_height = $(this).find(".list.right").height();
+
+        if (left_height > right_height)
+            $(this).find(".list.right").height(left_height);
+        else
+            $(this).find(".list.left").height(right_height);
+    });
+
+</script>
+
+
+<div class="wrap">
+{% for bt in business_types %}
+    <div id="div-{{ bt }}" class='box'>
+        <!-- new -->
+        <div class="list left">
+            {% if segments|get_item:bt|get_item:'new' %}
+                {% for segment in segments|get_item:bt|get_item:'new' %}
+                    <div class="item">
+                        <p class='label' style=''>Segment: {{ segment.business_type }} {{ segment.client_type }} ({{ segment.hit }})
+                            {% if segment.executionkey != 'null' and segment.executionkey != '0' %}
+                                (ExecutionKey = {{ segment.executionkey }})
+                            {% endif %}
+                        </p>
+                        <p class='label' style=''>Scorecard: {{ segment.scorecard }}
+                            {% if segment.share != 1 %}
+                                ({{ segment.share }})
+                            {% endif %}
+                        </p>
+                        {% if segment.add_info %}
+                            <p class='label' style=''>{{ segment.add_info }}</p>
+                        {% endif %}
+
+                        <div class="inner">
+                        <p class='rg'>A</p>
+                        <p class='limit'>Limit: {{ segment.limit_a}}</p>
+                        <p class='min_value'>Min value: {{ segment.min_value_a}}</p>
+                        <p class='max_value'>Max value: {{ segment.max_value_a}}</p>
+                        <svg class="svg" id="{{ segment.label }}_a" height="125" width="150" onclick=""></svg>
+                        </div>
+
+                        <!-- onclick="gauges_new[{{ forloop.counter0 }}*4].update(NewValue());" -->
+                        
+                        <div class="inner">
+                            <p class='rg'>B</p>
+                            <p class='limit'>Limit: {{ segment.limit_b}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_b}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_b}}</p>
+                            <svg class="svg" id="{{ segment.label }}_b" height="125" width="150" onclick=""></svg>
+                        </div>
+                        <div class="inner">
+                            <p class='rg'>C</p>
+                            <p class='limit'>Limit: {{ segment.limit_c}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_c}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_c}}</p>
+                            <svg class="svg" id="{{ segment.label }}_c" height="125" width="150" onclick=""></svg>
+                        </div>
+                        <div class="inner">
+                            <p class='rg'>D</p>
+                            <p class='limit'>Limit: {{ segment.limit_d}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_d}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_d}}</p>
+                            <svg class="svg" id="{{ segment.label }}_d" height="125" width="150" onclick=""></svg>
+                        </div>
+
+                        <script>
+                            var config = liquidFillGaugeDefaultSettings();
+                            config.waveAnimateTime = 4000;
+                            gauges_new.push(loadLiquidFillGauge("{{ segment.label }}_a", {{ segment.power_a }}, config));
+                            gauges_new.push(loadLiquidFillGauge("{{ segment.label }}_b", {{ segment.power_b }}, config));
+                            gauges_new.push(loadLiquidFillGauge("{{ segment.label }}_c", {{ segment.power_c }}, config));
+                            gauges_new.push(loadLiquidFillGauge("{{ segment.label }}_d", {{ segment.power_d }}, config));
+                        </script>
+
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+        </div>
+
+        <!-- repeat -->
+        <div class="list right">
+            {% if segments|get_item:bt|get_item:'repeat' %}
+                {% for segment in segments|get_item:bt|get_item:'repeat' %}
+                    <div class="item">
+                        <p class='label' style=''>Segment: {{ segment.business_type }} {{ segment.client_type }} ({{ segment.hit }})
+                            {% if segment.executionkey != 'null' and segment.executionkey != '0' %}
+                                (ExecutionKey = {{ segment.executionkey }})
+                            {% endif %}
+                        </p>
+                        <p class='label' style=''>Scorecard: {{ segment.scorecard }}
+                            {% if segment.share != 1 %}
+                                (share = {{ segment.share }})
+                            {% endif %}
+                        </p>
+                        {% if segment.add_info %}
+                            <p class='label' style=''>{{ segment.add_info }}</p>
+                        {% endif %}
+
+                        <div class="inner">
+                            <p class='rg'>A</p>
+                            <p class='limit'>Limit: {{ segment.limit_a}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_a}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_a}}</p>
+                            <svg class="svg" id="{{ segment.label }}_a" height="125" width="150" onclick=""></svg>
+                        </div>
+                        <div class="inner">
+                            <p class='rg'>B</p>
+                            <p class='limit'>Limit: {{ segment.limit_b}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_b}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_b}}</p>
+                            <svg class="svg" id="{{ segment.label }}_b" height="125" width="150" onclick=""></svg>
+                        </div>
+                        <div class="inner">
+                            <p class='rg'>C</p>
+                            <p class='limit'>Limit: {{ segment.limit_c}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_c}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_c}}</p>
+                            <svg class="svg" id="{{ segment.label }}_c" height="125" width="150" onclick=""></svg>
+                        </div>
+                        <div class="inner">
+                            <p class='rg'>D</p>
+                            <p class='limit'>Limit: {{ segment.limit_d}}</p>
+                            <p class='min_value'>Min value: {{ segment.min_value_d}}</p>
+                            <p class='max_value'>Max value: {{ segment.max_value_d}}</p>
+                            <svg class="svg" id="{{ segment.label }}_d" height="125" width="150" onclick=""></svg>
+                        </div>
+
+                        <script>
+                            var config = liquidFillGaugeDefaultSettings();
+                            config.waveAnimateTime = 4000;
+                            gauges_repeat.push(loadLiquidFillGauge("{{ segment.label }}_a", {{ segment.power_a }}, config));
+                            gauges_repeat.push(loadLiquidFillGauge("{{ segment.label }}_b", {{ segment.power_b }}, config));
+                            gauges_repeat.push(loadLiquidFillGauge("{{ segment.label }}_c", {{ segment.power_c }}, config));
+                            gauges_repeat.push(loadLiquidFillGauge("{{ segment.label }}_d", {{ segment.power_d }}, config));
+
+                        </script>
+
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+        </div>
+        <div class="clearfix"></div>
+    </div>
+{% endfor %}
+
+</div>
+
+
+</body>
+</html>
+
+
+{% endblock %}

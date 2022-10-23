@@ -1,0 +1,232 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+    
+<style>
+
+  path {
+    stroke:white;
+    stroke-width: 1px;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+  }
+
+  .appl {
+    font: 10px sans-serif;
+    font-weight: bold;
+  }
+
+  .legend {
+    font-size: 12px;
+  }
+
+  div.tooltip {   
+    position: absolute;           
+    text-align: center;           
+    width: 150px;                  
+    height: 25px;                 
+    padding: 2px;             
+    font-size: 10px;     
+    background: #FFFFE0;
+    border: 1px;      
+    border-radius: 8px;           
+    pointer-events: none;         
+  }  
+
+</style>
+
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/queue.v1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'map/topojson.v2.min.js' %}"></script>
+<!-- <script type="text/javascript" src="{% static 'map/topojson.v0.min.js' %}"></script> -->
+
+
+
+<script type="text/javascript">
+
+  var applications = JSON.parse('{{ json_map_fpd | escapejs }}');
+
+  var width = 1860,
+  height = 900;
+
+  var centered;
+
+  // Setting color domains(intervals of values) for our map
+
+  var color_domain = [50, 150, 350, 750, 1500]
+  var ext_color_domain = [0, 50, 150, 350, 750, 1500]
+  var legend_labels = ["< 50", "50+", "150+", "350+", "750+", "> 1500"]              
+  var color = d3.scale.threshold()
+    .domain(color_domain)
+    .range(["#adfcad", "#ffcb40", "#ffba00", "#ff7d73", "#ff4e40", "#ff1300"]);
+
+  var div = d3.select("body").append("div")   
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+
+  //-------------
+  const zoom1 = d3.zoom()
+    .scaleExtent([1, 20])
+    .translateExtent([[0, 0], [width, height]])
+    .extent([[0, 0], [width, height]])
+    .on("zoom", zoomed);
+
+  function zoomed() {
+    svg.attr("transform", d3.event.transform);
+  }
+  //--------------
+
+  var svg = d3.select("body").append("svg")
+    // .call(d3.zoom()
+    //   .on("zoom", function () {
+    //           svg.attr("transform", d3.event.transform)
+    //   }))
+    .attr("width", width)
+    .attr("height", height)
+    .style("margin", "10px auto")
+    // .call(zoom1)
+    ;
+
+  var projection = d3.geoAlbers()
+    .rotate([-100, 0])
+    .center([-10, 65])
+    .parallels([52, 64])
+    .scale(1100)
+    .translate([width / 2, height / 2])
+    .precision(.1)
+    ;
+
+  var path = d3.geoPath().projection(projection);
+  // var g = svg.append("g");
+
+  //Reading map file and data
+
+  var dsv = d3.dsv(';')
+
+  queue()
+    .defer(d3.json, "{% static 'map/russia_1e-7sr.json' %}") // regions boundaries
+    // .defer(d3.csv, "{% static 'map/example/Accidents.csv' %}")
+    .defer(d3.csv, "{% static 'map/region_info.csv' %}")
+    .await(load_data);
+
+  //Start of Choropleth drawing
+
+
+
+  function load_data(error, map, data) {
+     var rateById = {};
+     var nameById = {};
+
+     data.forEach(function(d) {
+      d.RegionName = d.RegionName;
+      rateById[d.RegionCode] = 0;//+d.Deaths;
+      nameById[d.RegionCode] = d.RegionName;
+  });
+
+  //Drawing Choropleth
+
+  svg.append("g")
+    .attr("class", "region")
+    .selectAll("path")
+    // .data(topojson.object(map, map.objects.russia).geometries)
+    .data(topojson.feature(map, map.objects.russia).features) //<-- in case topojson.v1.js
+    .enter().append("path")
+    .attr("d", path)
+    .style("fill", function(d) {
+      return color(rateById[d.properties.region]); 
+    })
+    .style("opacity", 0.7)
+    //Adding mouseevents
+    .on("mouseover", function(d) {
+        d3.select(this).transition().duration(300).style("opacity", 1);
+        div.transition().duration(100)
+        .style("opacity", 1)
+        div.text(nameById[d.properties.region]) // + " : " + rateById[d.properties.region])
+        .style("left", (d3.event.pageX) + "px")
+        .style("top", (d3.event.pageY -30) + "px");
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+        .transition().duration(300)
+        .style("opacity", 0.7);
+        div.transition().duration(300)
+        .style("opacity", 0);
+    })
+    // .on("click", clicked)
+    ;
+  
+   // Adding cities on the map
+    var appl = svg.selectAll("g.appl")
+      .data(applications)
+      .enter()
+      .append("g")
+      .attr("class", "appl")
+      .attr("transform", function(d) { return "translate(" + projection([d.lon, d.lat]) + ")"; });
+
+    appl.append("circle")
+      .attr("r", 3)
+      .style("fill", "red")
+      .style("opacity", 0.4);
+
+    // appl.append("text")
+    // .attr("x", 5)
+    // .text(function(d) { return d.ucdb_id; });
+
+  
+  }; // <-- End of Choropleth drawing
+ 
+  //Adding legend for our Choropleth
+
+  // var legend = svg.selectAll("g.legend")
+  //   .data(ext_color_domain)
+  //   .enter().append("g")
+  //   .attr("class", "legend");
+
+  // var ls_w = 20, ls_h = 20;
+
+  // legend.append("rect")
+  //   .attr("x", 20)
+  //   .attr("y", function(d, i){ return height - (i*ls_h) - 2*ls_h;})
+  //   .attr("width", ls_w)
+  //   .attr("height", ls_h)
+  //   .style("fill", function(d, i) { return color(d); })
+  //   .style("opacity", 0.8);
+
+  // legend.append("text")
+  //   .attr("x", 50)
+  //   .attr("y", function(d, i){ return height - (i*ls_h) - ls_h - 4;})
+  //   .text(function(d, i){ return legend_labels[i]; });
+
+
+  function clicked(d) {
+    var x, y, k;
+
+    if (d && centered !== d) {
+      var centroid = path.centroid(d);
+      x = centroid[0];
+      y = centroid[1];
+      console.log(x, y)
+      k = 4;
+      centered = d;
+    } else {
+      x = width / 2;
+      y = height / 2;
+      k = 1;
+      centered = null;
+      console.log(x, y)
+    }
+
+    svg.selectAll("path")
+        .classed("active", centered && function(d) { return d === centered; });
+
+    svg.transition()
+        .duration(750)
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+        .style("stroke-width", 1.5 / k + "px");
+  }
+
+  </script>
+  
+</script>
+
+{% endblock %}

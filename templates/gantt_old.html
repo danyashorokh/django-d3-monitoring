@@ -1,0 +1,603 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+<style>
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+}
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+
+.inner {
+    margin: auto;
+    /*margin-top: 30pt;*/
+    padding:10pt;
+    /*border:2px solid red;*/
+    border-radius:4pt;
+    width:80%;
+    height:450px;
+    display: block;
+    vertical-align: middle;
+}
+
+.chart {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+ 
+.axis path,.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+ 
+/*.bar {
+  fill: #33b5e5;
+}*/
+ 
+.bar-ready {
+  fill: #0AA153;
+}
+ 
+.bar-in-work {
+  fill: #FABB0C;
+}
+ 
+.bar-is-planned {
+  fill: #103CB5;
+}
+ 
+.bar-canceled {
+  fill: #AB120F;
+}
+ 
+
+.tooltip {
+    background: #eee;
+    box-shadow: 0 0 5px #999999;
+    color: #333;
+    font-size: 12px;
+    left: 130px;
+    padding: 10px;
+    position: absolute;
+    text-align: center;
+    top: 95px;
+    z-index: 10;
+    display: block;
+    opacity: 0;
+    border-radius: 8px;
+}
+
+/*.gantt-chart rect {
+  height: 120;
+}*/
+
+
+</style>
+
+
+<form method="post" action="/scorecard_gantt/">
+        {% csrf_token %}
+        Choose scorecard
+        <select name='scorecard'>
+        {% for scorecard in scorecard_options %}
+          {% if cur_scorecard == scorecard %}
+            <option selected value='{{ scorecard }}'>{{ scorecard }}</option>
+          {% else %}
+            <option value='{{ scorecard }}'>{{ scorecard }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+        <input type="submit" value="Submit">
+</form>
+
+<!-- 
+json_data = [
+        {"startDate":"2018_06_01","endDate": "2018_06_10","taskName":"Сбор данных","status":"RUNNING"},
+        {"startDate":"2018_06_10","endDate": "2018_06_21","taskName":"Создание переменных","status":"RUNNING"},
+        {"startDate":"2018_06_15","endDate": "2018_06_30","taskName":"Отбор переменных","status":"FAILED"},
+        {"startDate":"2018_06_25","endDate": "2018_07_05","taskName":"Создание модели","status":"RUNNING"},
+        {"startDate":"2018_07_06","endDate": "2018_07_07","taskName":"Расчет фин эффекта","status":"KILLED"},
+        {"startDate":"2018_07_07","endDate": "2018_07_10","taskName":"Вынос на тест","status":"RUNNING"},
+        {"startDate":"2018_07_11","endDate": "2018_07_20","taskName":"Тестирование","status":"SUCCEEDED"},
+    
+    ]
+ -->
+
+
+<div class="outer">
+  <div id='inner'>
+    <div id='chart1'></div>
+  </div>
+
+  <div id='inner'>
+    <div id='chart2'></div>
+  </div>
+
+  <div id='inner'>
+    <svg id="chart3" width="960" height="500"></svg></div>
+  </div>
+</div>
+
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+<!-- <script type="text/javascript" src="{% static 'js/gantt.js' %}"></script> -->
+<script type="text/javascript" src="{% static 'js/d3-layout.timelines2.js' %}"></script>
+
+<script>
+
+// date formatting
+var parseDate = d3.timeParse("%Y_%m_%d");
+
+// get data
+var tasks2 = JSON.parse('{{ tasks | escapejs }}');
+var taskNames = JSON.parse('{{ tasks_names | escapejs }}');
+var all_scorecards_names = JSON.parse('{{ all_scorecards_names | escapejs }}');
+var all_tasks = JSON.parse('{{ all_tasks | escapejs }}');
+var joined_tasks = JSON.parse('{{ joined_tasks | escapejs }}');
+
+tasks2.forEach(function(d) {
+    d.startDate = parseDate(d.startDate);
+    d.endDate = parseDate(d.endDate);
+});
+
+all_tasks.forEach(function(d) {
+    d.startDate = parseDate(d.startDate);
+    d.endDate = parseDate(d.endDate);
+});
+
+joined_tasks.forEach(function(d) {
+    d.startDate = parseDate(d.startDate);
+    d.endDate = parseDate(d.endDate);
+});
+
+tasks2.sort(function(a, b) {
+    return a.endDate - b.endDate;
+});
+// var maxDate = tasks2[tasks2.length - 1].endDate;
+tasks2.sort(function(a, b) {
+    return a.startDate - b.startDate;
+});
+
+joined_tasks.sort(function(a, b) {
+    return a.endDate - b.endDate;
+});
+joined_tasks.sort(function(a, b) {
+    return a.startDate - b.startDate;
+});
+
+console.log('tasks:\n', tasks2);
+console.log('taskNames:\n', taskNames);
+console.log('all_tasks:\n', all_tasks);
+console.log('joined_tasks:\n', joined_tasks);
+
+var taskStatus = {
+    "Ready" : "bar-ready",
+    "In work" : "bar-in-work",
+    "Is planned" : "bar-is-planned",
+    "Canceled" : "bar-canceled"
+};
+
+// var minDate = tasks2[0].startDate;
+
+// var format = "%H:%M";
+var format = "%Y %m %d";
+// var formatTime = d3.timeFormat("%A %B %d, %Y");
+var formatTime = d3.timeFormat("%d/%m/%Y %A");
+
+// claculate height
+// var ganttHeight = 50 * taskNames.length + 200;
+// if (taskNames.length == 1) {ganttHeight = ganttHeight + 50;}
+
+
+// ----------------- gantt object ------------------------
+
+d3.gantt = function(block_height, task_names) {
+
+  // console.log(tag);
+
+  // var height = 500;
+  var full_width = 1200;
+
+  var FIT_TIME_DOMAIN_MODE = "fit";
+  // var FIXED_TIME_DOMAIN_MODE = "fixed";
+
+  var margin = {
+    top : 20,
+    right : 40,
+    bottom : 30,
+    left : 180
+  };
+
+  var timeDomainStart = d3.timeDay.offset(new Date(), -3);
+  var timeDomainEnd = d3.timeHour.offset(new Date(), +3);
+  var timeDomainMode = FIT_TIME_DOMAIN_MODE;// fixed or fit
+  var taskTypes = [];
+  var taskStatus = [];
+
+  var height = block_height * task_names.length; // 50
+  var width = full_width - margin.right - margin.left - 5;
+
+  
+  var tickFormat = "%H:%M";
+
+  var keyFunction = function(d) {
+    return d.startDate + d.taskName + d.endDate;
+  };
+
+  var x, y, xAxis, yAxis;
+
+  initAxis();
+
+  var initTimeDomain = function(tasks) {
+    if (timeDomainMode === FIT_TIME_DOMAIN_MODE) {
+      if (tasks === undefined || tasks.length < 1) {
+        timeDomainStart = d3.time.day.offset(new Date(), -3);
+        timeDomainEnd = d3.time.hour.offset(new Date(), +3);
+        return;
+      }
+      tasks.sort(function(a, b) {
+        return a.endDate - b.endDate;
+      });
+      timeDomainEnd = tasks[tasks.length - 1].endDate;
+      tasks.sort(function(a, b) {
+        return a.startDate - b.startDate;
+      });
+      timeDomainStart = tasks[0].startDate;
+    }
+  };
+
+ function initAxis() {
+    x = d3.scaleTime().domain([ timeDomainStart, timeDomainEnd ]).range([ 0, width ])
+      .clamp(true);
+
+    y = d3.scaleBand().domain(taskTypes).rangeRound([ 0, height], .1);
+
+    xAxis = d3.axisBottom().scale(x).tickFormat(d3.timeFormat(tickFormat))
+      .tickSize(8).tickPadding(8);
+
+    yAxis = d3.axisLeft().scale(y).tickSize(0);
+
+  };
+
+  function gantt(tasks, tag) {
+
+    initTimeDomain(tasks);
+    initAxis();
+
+    var svg = d3.select(tag)
+      .append("svg")
+      .attr("class", "chart")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("class", "gantt-chart")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .attr("transform", "translate(" + margin.left + ", " + margin.top + ")")
+      ;
+
+    svg.selectAll(".chart")
+      .data(tasks, keyFunction).enter()
+      .append("rect")
+      .attr("rx", 5)
+      .attr("ry", 5)
+      .attr("class", function(d){ 
+        if(taskStatus[d.status] == null){ return "bar";}
+        return taskStatus[d.status];
+      }) 
+      .attr("y", 10)
+      .attr("transform", function(d) { 
+        return "translate(" + x(d.startDate) + "," + y(d.taskName) + ")"; 
+      })
+      .attr("height", function(d) { return 30; })
+      .attr("width", function(d) { 
+        return (x(d.endDate) - x(d.startDate)); 
+      });
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0, " + (height) + ")")
+      .transition()
+      .call(xAxis);
+
+    svg.append("g").attr("class", "y axis").transition().call(yAxis);
+
+    return gantt;
+
+  };
+
+  gantt.margin = function(value) {
+    if (!arguments.length)
+      return margin;
+    margin = value;
+    return gantt;
+  };
+
+  gantt.timeDomain = function(value) {
+    if (!arguments.length)
+      return [ timeDomainStart, timeDomainEnd ];
+    timeDomainStart = +value[0], timeDomainEnd = +value[1];
+    return gantt;
+  };
+
+ /**
+  * @param {string}
+  *                vale The value can be "fit" - the domain fits the data or
+  *                "fixed" - fixed domain.
+  */
+
+  gantt.timeDomainMode = function(value) {
+    if (!arguments.length)
+      return timeDomainMode;
+    timeDomainMode = value;
+    return gantt;
+
+  };
+
+  gantt.taskTypes = function(value) {
+    if (!arguments.length)
+      return taskTypes;
+    taskTypes = value;
+    return gantt;
+  };
+
+  gantt.taskStatus = function(value) {
+    if (!arguments.length)
+      return taskStatus;
+    taskStatus = value;
+    return gantt;
+  };
+
+  gantt.width = function(value) {
+    if (!arguments.length)
+      return width;
+    width = +value;
+    return gantt;
+  };
+
+  gantt.height = function(value) {
+    if (!arguments.length)
+      return height;
+    height = +value;
+    return gantt;
+  };
+
+  gantt.tickFormat = function(value) {
+    if (!arguments.length)
+      return tickFormat;
+    tickFormat = value;
+    return gantt;
+  };
+
+  return gantt;
+};
+
+
+// ---------------- CHART 1 -----------------------
+
+var block_height = 50;
+var gantt = d3.gantt(block_height, taskNames).taskTypes(taskNames).taskStatus(taskStatus).tickFormat(format)
+// .height(ganttHeight)
+// .width(1000)
+;
+
+gantt(tasks2, '#chart1');
+
+// --------- tooltips ----------
+var tooltip = d3.select("#chart1")
+  .append('div')
+  .attr('class', 'tooltip');
+
+tooltip.append('div').attr('class', 'taskName');
+tooltip.append('div').attr('class', 'tempRange');
+// tooltip.append('div').attr('class', 'progress');
+
+    d3.selectAll(".gantt-chart rect")
+    .on('mouseover', function(d) {
+
+      
+      if (d.comment) {
+       tooltip.select('.taskName').html("<b>" + d.taskName + "</b><br><u>Комментарий</u>: " + d.comment);
+      } else {
+        tooltip.select('.taskName').html("<b>" + d.taskName + "</b>");
+      }
+      tooltip.select('.tempRange').html(formatTime(d.startDate) + " to " + formatTime(d.endDate) + ' (' + parseInt((d.endDate.getTime()-d.startDate.getTime())/(24*3600*1000)) + " day(s))");
+
+      tooltip.style('display', 'block');
+      tooltip.style('opacity',2);
+
+    })
+    .on('mousemove', function(d) {
+      tooltip.style('top', (d3.event.layerY + 10) + 'px')
+      .style('left', (d3.event.layerX - 25) + 'px');
+    })
+    .on('mouseout', function() {
+      tooltip.style('display', 'none');
+      tooltip.style('opacity',0);
+    });
+
+// ----------------------- CHART 2 ---------------------------
+
+var block_height = 70;
+var gantt2 = d3.gantt(block_height, all_scorecards_names).taskTypes(all_scorecards_names).taskStatus(taskStatus).tickFormat(format)
+// .height(ganttHeight)
+// .width(1000)
+;
+
+gantt2(joined_tasks, '#chart2');
+
+// ----------------------- CHART 3 ---------------------------
+
+// var svg = d3.select("#chart3");
+// var margin = {top: 40, right: 40, bottom: 150, left: 340};
+// var width = +svg.attr("width") - margin.left - margin.right;
+// // var height = +svg.attr("height") - margin.top - margin.bottom;
+// var height = 100 * all_scorecards_names.length;
+
+// var g1 = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart2");
+
+// var tickFormat = "%Y %m %d";
+// var color = d3.scaleOrdinal(d3.schemeCategory20);
+// var parseDate = d3.timeFormat("%Y %m %d")
+
+// var min_date = d3.min(all_tasks, function(d) { return d.startDate; });
+// var max_date = d3.max(all_tasks, function(d) { return d.endDate; });
+
+// // x = d3.scaleTime().range([0, width]);
+// // x.domain(d3.extent(all_tasks, function(d) { return d.endDate; }));
+// // x.domain([min_date, max_date]);
+// // xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat(tickFormat)).tickPadding(8);
+
+// console.log('min: ', min_date);
+// console.log('max: ', max_date);
+
+// var timeline = d3.timeline()
+//   .size([500, 1200])
+//   // .extent([1 + "/" + (min_date.getMonth() + 1) + "/" + min_date.getFullYear(), 
+//   //   max_date.getDate() + "/" + (max_date.getMonth() + 2) + "/" + max_date.getFullYear()])
+//   // .extent(["01/07/2018", "03/03/2019"])
+//   .extent([min_date, max_date])
+//   // .dateFormat(function (d) { return d; })
+//   .padding(3)
+//   .maxBandHeight(20);
+
+// all_scorecards_names.forEach(function (type, i) {
+  
+//   onlyThisType = all_tasks.filter(function(d) {return d.scorecard === type});
+
+//   var theseBands = timeline(onlyThisType);
+//   // console.log(theseBands);
+
+//   g1.append("g")
+//     .attr("transform", "translate(0," + (35 + (i * 90)) + ")")
+//     .selectAll("rect")
+//     .data(theseBands)
+//     .enter()
+//     .append("rect")
+//     .attr("rx", 2)
+//     .attr("x", function (d) {return d.startDate})
+//     .attr("y", function (d) {return d.y})
+//     .attr("height", function (d) {return d.dy})
+//     .attr("width", function (d) {return d.endDate - d.startDate})
+//     .style("fill", function (d) {return color(d.scorecard)})
+//     .style("stroke", "black")
+//     .style("stroke-width", 1);
+
+//   // g1.select("g")
+//   //   .selectAll("text")
+//   //   .data(theseBands)
+//   //   .enter()
+//   //   .append("text")
+//   //   .attr("x", function (d) {return (d.startDate + d.endDate) / 2})
+//   //   .attr("y", function (d) {return d.y + (d.dy / 2)})
+//   //   .text(function(d) {return d.taskName})
+//   //   .style("opacity", 1)
+//   //   .style("pointer-events", "none")
+//   //   .style("text-anchor", "middle")
+//   //   .style("font-size", "14px");
+
+//   g1.append("text")
+//     .text(type)
+//     .attr("y", 50 + (i * 90))
+//     .attr("x", -300);
+
+//   // draw axis regardless of timeline
+//   // x = d3.scaleTime().range([0, width]);
+
+//   var max_width = d3.max(theseBands, function(d) { return d.endDate; });
+//   var min_width = d3.min(theseBands, function(d) { return d.startDate; });
+
+//   x = d3.scaleTime()
+//     .range([0, max_width]);
+
+//   x.domain([min_date, max_date])
+
+//   xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat(tickFormat)); //.tickPadding(8);
+//   // xAxis = d3.axisBottom(x).tickSizeInner(25).ticks(d3.timeYear.every(1)).tickFormat(d3.timeFormat(tickFormat)); //.tickPadding(8);
+
+//   // g1.append("g")
+//   //   .attr("class", "x--axis")
+//   //   .attr("transform", "translate(0, " + (height) + ")")
+//   //   .transition()
+//   //   .call(xAxis)
+//   //   .selectAll("text")
+//   //   .attr("y", 0)
+//   //   .attr("x", 9)
+//   //   .attr("dy", ".35em")
+//   //   .attr("transform", "rotate(90)")
+//   //   .style("text-anchor", "start")
+//   //   ;
+
+//   // var xTickValues = [min_date, max_date];
+//   // d3.select(".x--axis").call(xAxis.tickValues(xTickValues));
+
+
+//   // try
+//   var mouseG = g1.append("g")
+//     .attr("class", "mouse-over-effects");
+
+//   mouseG.append("path") // this is the black vertical line to follow mouse
+//     .attr("class", "mouse-line")
+//     .style("stroke", "grey")
+//     .style("stroke-width", "1px")
+//     .style("opacity", "0");
+
+//   var mousePerLine = mouseG.selectAll('.mouse-per-line')
+//     .data(theseBands)
+//     .enter()
+//     .append("g")
+//     .attr("class", "mouse-per-line");
+
+//   mousePerLine.append("text")
+//     .attr("transform", "translate(10,3)");
+
+//   mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+//     .attr('width', max_width) // can't catch mouse events on a g element
+//     .attr('height', height)
+//     .attr('fill', 'none')
+//     .attr('pointer-events', 'all')
+//     .on('mouseout', function() { // on mouse out hide line, circles and text
+//       d3.select(".mouse-line")
+//         .style("opacity", "0");
+//       d3.selectAll(".mouse-per-line text")
+//         .style("opacity", "0");
+//     })
+//     .on('mouseover', function() { // on mouse in show line, circles and text
+//       d3.select(".mouse-line")
+//         .style("opacity", "1");
+//       d3.selectAll(".mouse-per-line text")
+//         .style("opacity", "1");
+//     })
+//     .on('mousemove', function() { // mouse moving over canvas
+//       var mouse = d3.mouse(this);
+//       d3.select(".mouse-line")
+//         .attr("d", function() {
+//           var d = "M" + mouse[0] + "," + height;
+//           d += " " + mouse[0] + "," + 0;
+//           return d;
+//         });
+
+//       d3.selectAll(".mouse-per-line")
+//         .attr("transform", function(d, i) {
+//           var xDate = x.invert(mouse[0]);
+    
+//           d3.select(this).select('text')
+//             .text(parseDate(xDate));
+            
+//           return "translate(" + mouse[0] + "," + 10 +")";
+//         });
+//     });
+
+// })
+
+
+</script>
+
+
+{% endblock %}

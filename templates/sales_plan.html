@@ -1,0 +1,101 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+{% load user_tags %}
+
+
+<style>
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+.inner {
+    margin: auto;
+    /*margin-top: 30pt;*/
+    padding:10pt;
+    /*border:2px solid red;*/
+    border-radius:4pt;
+    width:80%;
+    height:450px;
+    display: block;
+    vertical-align: middle;
+}
+
+p {
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 40px;
+}
+
+
+table.dataframe {
+  border-collapse: collapse;
+  font: 11px sans-serif;
+}
+
+table.dataframe > th, td {
+            padding: 3px;
+            text-align: left;
+            
+        }
+
+  [aria-hidden="true"] {
+    opacity: 0;
+    position: absolute;
+    z-index: -9999;
+    pointer-events: none;
+  }
+
+</style>
+
+
+{% if request.user|has_group:"risk" or request.user.is_superuser %}
+
+<script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.4.0/clipboard.min.js"></script>
+
+<div class="outer">
+
+    <div class="inner">
+
+        <select id="tableselector">
+          {% for name, table in tables.items %}
+            <option>{{ name }}</option>
+          {% endfor %}
+        </select>
+
+        <center>
+          {% for name, table in tables.items %}
+            {% if forloop.counter == 1 %}
+              <div class='sales_plan' id='{{ name }}' style="display:block">
+                <p>{{ name }}</p>
+                {{ table|safe }}
+              </div>
+            {% else %}
+              <div class='sales_plan' id='{{ name }}' style="display:none">
+                <p>{{ name }}</p>
+                {{ table|safe }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </center>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('#tableselector').change(function(){
+            $('.sales_plan').hide();
+            $('#' + $(this).val()).show();
+        });
+    });
+</script>
+
+
+
+{% endif %}
+
+{% endblock %}

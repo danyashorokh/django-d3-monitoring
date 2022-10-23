@@ -1,0 +1,606 @@
+{% extends 'index.html' %} {% load staticfiles %} {% load user_tags %} {% block content %}
+
+
+
+    <style>
+
+
+	.line {
+		fill: none;
+		stroke: #EF5285;
+		stroke-width: 2px;
+	}
+
+	path {
+	  stroke: #ccc;
+	  stroke-width: 1.5px;
+	  fill: none;
+	}
+
+	/*path:hover {
+	  stroke-width: 5px;
+	}
+*/
+	
+	.ygrid line {
+	  stroke: lightgrey;
+	  stroke-opacity: 0.7;
+	  stroke-dasharray: 6,6;
+	  shape-rendering: crispEdges;
+	}
+
+	.ygrid path {
+	  stroke-width: 0;
+	}
+
+	#legendContainer{
+	  position:absolute;
+	  top: 10px;
+	  left: 1050px;
+	  overflow-x: auto;
+	  /*overflow: auto;*/
+	  height: 1500px;
+	  width:800px;
+	}
+
+	#legend{
+	  width: 800px;
+	  height: 1200px;
+	}
+
+	.legend {
+	  font-size: 14px;
+	  font-weight: normal;
+	  text-anchor: left;
+
+	}
+
+	.legendcheckbox{
+	  cursor: pointer;
+	}
+
+	#dataTable{
+	  position:absolute;
+	  /*top: 100px;*/
+	  left: 70px; 
+	  height: 1500px;
+	  width: 100%;
+	  /*overflow: auto;*/
+	  margin-top: 200px;
+	}
+
+	/*data table*/
+	th, td {
+	    padding: 5px;
+	    text-align: left;
+	}
+
+	table {
+    	border-collapse: collapse;
+	}
+
+	/*#dataTable {
+		width: 1000px;
+	}*/
+
+	table.datatable {
+		width: 100%;
+	}
+
+	/*.button {
+		background-color: #4CAF50;
+	}
+*/
+
+    </style>
+
+    <div style="position: relative;">
+    	<form action="/vintages/" method="post">
+    		{% csrf_token %}
+    		
+		    <!-- <input type="checkbox" id="segment" name="segment"/> -->
+
+        	<!-- Loan_type selection -->       	
+	        <select id="segment_list" name="segment[]" multiple>
+	        	{% for segment in filtering_values.segment %}
+        			{% if segment in filters.segment %}
+						<option class="segment_list" value="{{ segment }}" selected>{{ segment }}</option>
+					{% else %}
+						<option class="segment_list" value="{{ segment }}">{{ segment }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+	        <label for="segment_list">segment</label>
+	        <br>
+   	
+	        <select id="client_type_list" name="client_type[]" multiple>
+	        	{% for client_type in filtering_values.client_type %}
+        			{% if client_type in filters.client_type %}
+						<option value="{{ client_type }}" selected>{{ client_type }}</option>
+					{% else %}
+						<option value="{{ client_type }}">{{ client_type }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+	        <label for="client_type_list">client_type</label>
+	        <br>
+
+	        <select id="business_type_list" name="business_type[]" multiple>
+	        	{% for business_type in filtering_values.business_type %}
+        			{% if business_type in filters.business_type %}
+						<option value="{{ business_type }}" selected>{{ business_type }}</option>
+					{% else %}
+						<option value="{{ business_type }}">{{ business_type }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+	        <label for="business_type_list">business_type</label>
+	        <br>
+        
+	        <select id="execution_key_list" name="execution_key[]" multiple>
+	        	{% for execution_key in filtering_values.execution_key %}
+        			{% if execution_key in filters.execution_key %}
+						<option value="{{ execution_key }}" selected>{{ execution_key }}</option>
+					{% else %}
+						<option value="{{ execution_key }}">{{ execution_key }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+	        <label for="execution_key_list">execution_key</label>
+	        <br>
+	        
+	        <select id="request_channel_list" name="request_channel[]" multiple>
+	        	{% for request_channel in filtering_values.request_channel %}
+        			{% if request_channel in filters.request_channel %}
+						<option value="{{ request_channel }}" selected>{{ request_channel }}</option>
+					{% else %}
+						<option value="{{ request_channel }}">{{ request_channel }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+	        <label for="request_channel_list">request_channel</label>
+	        <br>
+
+	        <select id="branch_list" name="branch[]" multiple>
+	        	{% for branch in filtering_values.branch %}
+        			{% if branch in filters.branch %}
+						<option value="{{ branch }}" selected>{{ branch }}</option>
+					{% else %}
+						<option value="{{ branch }}">{{ branch }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+	        <label for="branch_list">branch</label>
+	        <br>
+	   
+
+        	<!-- {% for field in fields_list %}
+	        <label for="{{ field }}_list">{{ field }}</label>
+	        <select id="{{ field }}_list" name="{{ field }}[]" multiple>
+	        	{% for field_f in filtering_values.field %}
+        			{% if field_f in filters.field %}
+						<option value="{{ field_f }}" selected>{{ field_f }}</option>
+					{% else %}
+						<option value="{{ field_f }}">{{ field_f }}</option>
+					{% endif %}
+				{% endfor %}
+	        </select>
+
+	        <br>
+        	{% endfor %} -->
+
+			<br>
+			{% if error %}
+				<p style='color: red'>Выберите корректные фильтры<p>
+			{% else %}
+				<p></p>
+			{% endif %}
+			<input type="submit" value="Применить фильтры">
+
+		</form>
+		
+
+		<!-- <p>Filters:</p>
+		{{ filters }}
+		<p>All possible values:</p>
+		{{ filtering_values }} -->
+
+		<div id="legendContainer" class="legendContainer">
+	  		<svg id="legend"></svg>
+	  	</div>
+	  	<div id="dataTable">{{ data | safe }}</div>
+  	</div>
+
+  	
+	<!-- <link rel="stylesheet" href="{% static 'css/multi-select-styles.css' %}"> -->
+	<link rel="stylesheet" href="{% static 'css/multi-select-styles-2.css' %}">
+	<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'js/jquery.multi-select.js' %}"></script>
+    <script>
+
+    	// show toggle filter lists
+    	$(document).ready(function () {
+		    $('#segment').change(function () {
+		      $('#segment_list').fadeToggle();
+		    });
+
+		    // if ALL selected
+		    var segment_list = $('#segment_list').val()
+		    if(segment_list.lenght > 0) {
+		    	console.log(segment_list);
+		    	if (segment_list.indexOf('ALL') > -1) {
+				    $('.segment_list').attr('selected','selected');
+				}
+			} else {
+			    console.log('Nothing is selected');
+			}
+
+		});
+
+    	// mi=ulti select
+		$(function(){
+        	$('#segment_list').multiSelect();
+    	});
+
+    	$(function(){
+        	$('#client_type_list').multiSelect();
+    	});
+
+    	$(function(){
+        	$('#business_type_list').multiSelect();
+    	});
+
+    	$(function(){
+        	$('#execution_key_list').multiSelect();
+    	});
+
+    	$(function(){
+        	$('#request_channel_list').multiSelect();
+    	});
+
+    	$(function(){
+        	$('#branch_list').multiSelect();
+    	});
+
+    	// var fields = JSON.parse('{{ fields_json | escapejs }}');    	
+
+    </script>
+
+    <script>
+
+    // date formatting
+	// var parseDate = d3.timeParse("%Y_%m_%d");
+
+	// get data
+	var data = JSON.parse('{{ json_vintages | escapejs }}');
+
+	var labels = [];
+
+	// Format the data
+	data.forEach(function(d) {
+	  d.mob = +d.mob;
+	  d.value = +d.value;
+	  d.label = d.label;
+
+	  if (labels.indexOf(d.label) == -1) {
+	    labels.push(d.label);
+	  }
+	  //labels.push(d.date_label);
+	});
+
+	// for legend formatting
+	var longest_label = labels.sort(function (a, b) { return b.length - a.length; })[0];
+	var label_length = longest_label.length;
+
+	// console.log(label_length, labels);
+
+	console.log(data[0]);
+
+	var color = d3.scaleOrdinal()
+    .domain(data)
+    .range(["#3957ff", "#d3fe14", "#c9080a", "#fec7f8", "#0b7b3e", "#0bf0e9", "#c203c8", "#fd9b39", "#888593", "#906407", "#98ba7f", "#fe6794", "#10b0ff", "#ac7bff", "#fee7c0", "#964c63", "#1da49c", "#0ad811", "#bbd9fd", "#fe6cfe", "#297192", "#d1a09c", "#78579e", "#81ffad", "#739400", "#ca6949", "#d9bf01", "#646a58", "#d5097e", "#bb73a9", "#ccf6e9", "#9cb4b6", "#b6a7d4", "#9e8c62", "#6e83c8", "#01af64", "#a71afd", "#cfe589", "#d4ccd1", "#fd4109", "#bf8f0e", "#2f786e", "#4ed1a5", "#d8bb7d", "#a54509", "#6a9276", "#a4777a", "#fc12c9", "#606f15", "#3cc4d9", "#f31c4e", "#73616f", "#f097c6", "#fc8772", "#92a6fe", "#875b44", "#699ab3", "#94bc19", "#7d5bf0", "#d24dfe", "#c85b74", "#68ff57", "#b62347", "#994b91", "#646b8c"]);
+
+    // var color = d3.scaleOrdinal(d3.schemeCategory20); 
+	
+	// Set the margins
+	var full_height = 700;
+	var full_width = 1200;
+
+	var margin = {top: 60, right: 150, bottom: 200, left: 80},
+	  width = full_width - margin.left - margin.right,
+	  height = full_height - margin.top - margin.bottom;
+
+	// Set the ranges
+	var x = d3.scaleLinear().range([0, width]);
+	var y = d3.scaleLinear().range([height, 0]);
+
+	// Define the line
+	var valueLine = d3.line()
+	    .x(function(d) { return x(d.mob); })
+	    .y(function(d) { return y(d.value); })
+
+	// shift data table
+	document.getElementById("dataTable").style.top = full_height - 100 + 'px';
+	document.getElementById("dataTable").style.width = full_width - 100 + 'px';
+	// $(".dataframe").css({ width: '1200px' });
+	// $("#dataTable").css({ top: '1000px' });
+
+
+
+	// append the svg obgect to the body of the page
+	// appends a 'group' element to 'svg'
+	// moves the 'group' element to the top left margin
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	    .attr("transform",
+	          "translate(" + margin.left + "," + margin.top + ")")
+	    .attr("class", "svg");
+
+
+	var nest = d3.nest()
+	  .key(function(d){
+	    return d.label;
+	  })
+	  .entries(data)
+
+	 console.log(nest);
+
+	// Scale the range of the data
+	x.domain(d3.extent(data, function(d) { return d.mob; }));
+	y.domain([0, d3.max(data, function(d) { return d.value; })]);
+  
+	var xaxis = svg.append("g")
+	       .attr("transform", "translate(0," + height + ")")
+	       .attr("class", "x axis")
+	       .call(d3.axisBottom(x)
+	          // .ticks(d3.timeMonth)
+	          .tickSize(0, 0)
+	          // .tickFormat(d3.timeFormat("%B"))
+	          .tickSizeInner(0)
+	          .tickPadding(10));
+
+	var yaxis = svg.append("g")
+      .call(d3.axisLeft(y));
+
+
+    // add the Y gridlines
+	svg.append("g")			
+	    .attr("class", "ygrid")
+	    .call(d3.axisLeft(y)
+	        .tickSize(-width)
+	        .tickFormat("")
+	    )
+
+	// Add the X Axis
+	svg.append("text")
+	    .attr("y", height + 25)
+	    .attr("x", width/2)
+	    .attr("dy", "1em")
+	    .style("text-anchor", "middle")
+	    .text("Mob")
+	    .attr("class", "x axis label");
+	  
+	// Add a label to the y axis
+	svg.append("text")
+	    .attr("transform", "rotate(-90)")
+	    .attr("y", 0 - 60)
+	    .attr("x", 0 - (height / 2))
+	    .attr("dy", "1em")
+	    .style("text-anchor", "middle")
+	    .text("Vintages")
+	    .attr("class", "y axis label");
+  
+	// Draw the line
+	svg.selectAll(".line")
+	  .data(nest)
+	  .enter()
+	  .append("path")
+	      .attr("class", "line")
+	      .attr("d", function(d){ return valueLine(d.values)})
+	      .style("stroke", function(d,i) { return d.color = color(d.key); })
+	      .attr("id", d => 'tag'+d.key)
+	      .attr("clip-path", "url(#clip)");
+
+	//-----------------------------------------------------
+
+	dataCopy = data;
+  	dataFiltered = dataCopy.filter(d => $("." + d.station_id).attr("fill") != "#ccc");
+  	var t = d3.transition().duration(750);
+	
+	// Add legend
+	var legend = d3.select("#legend")
+	    .selectAll(".legend")
+	    .data(nest, d => d.key)
+	    .attr("id", d => 'legend' + d.key);
+
+	var elements_in_column = 20;
+
+	// --------- some magic --------------
+
+	// function getMaxWidth(sel) {
+	//     max = 0;
+	//     $(sel).each(function(){
+	//     	console.log('width' ,$(this).width())
+	//     	console.log('outerWidth', $(this).outerWidth())
+	//         c_width = parseInt($(this).outerWidth());
+	//         if (c_width > max) {
+	//             max = c_width;
+	//         }
+	//     });
+	//     return max;
+	// }
+
+	// var max_width_1 = getMaxWidth("text.legend");
+	// console.log(max_width_1);
+
+	// $('text.legend').each(function(){
+ //    	console.log('width' ,$(this).width());
+ //    	console.log('outerWidth', $(this).outerWidth());
+	// });
+
+	// document.getElementById("dataTable").style.top = full_height - 100 + 'px';
+
+
+	// var fontSize = 14;
+	// var test = document.getElementByClass(".legend");
+	// var test = $('text.legend')[0];
+	// test.style.fontSize = fontSize;
+	// var height = (test.clientHeight + 1) + "px";
+	// var width = (test.clientWidth + 1) + "px"
+
+	// console.log(height, width);
+
+	// ------------------------------
+
+	// Add the Legend text
+	legend.enter().append("text")
+	    // .attr("x", 80)
+	    // .attr("y", (d,i) => 20 +i*25)
+	    .attr("x", function(d, i) { return 80 + parseInt(i/elements_in_column)*label_length* 15;} ) // * 15
+	    .attr("y", function(d, i) { return height - 170 + 20 + (i%elements_in_column)*25; } )
+	    .attr("class", "legend")
+	    .attr("id", "legend-text")
+	    // .style('margin-left', '120px')
+	    // .text(d => d.values[0].name);
+	    .text(d => d.key);
+
+
+
+	// legend.enter().append("text")
+	//     .attr("x", 0)
+	//     .attr("y", (d, i) => 20 +i*25 )  // spacing
+	//     .attr("id", (d,i) => "legendData" + d.key)
+	//     .attr("class", "legendData");
+
+	// ENTER new elements present in new data checkboxes
+	legend.enter().append("rect")
+	    .attr("width", 15)
+	    .attr("height", 15)
+	    // .attr("x", 50)
+	    // .attr("y", (d, i) => 7.5 + i*25 )  // spacing
+
+	    .attr("x", function(d, i) { return 50 + parseInt(i/elements_in_column)*label_length* 15;} ) // *15
+	    .attr("y", function(d, i) { return height - 170 + 7.5 + (i%elements_in_column)*25; } )  // spacing
+	    // .style('margin-left', '120px')
+	    .attr("fill", d => color(d.key))
+	    .attr("class", (d,i) => "legendcheckbox " + d.key)
+	    .attr("class", 'legend') // ?
+	    .attr("id", (d,i) => "legendRect" + d.key)
+	    .on("mouseover", function(d){
+	      tempid = d.key;
+	      dataFilteredTemp = dataFiltered.filter(d => d.label == tempid );
+	      // console.log(tempid);
+	      // console.log(tempid, dataFilteredTemp);
+	      maxLine = d3.max((dataFilteredTemp).sort(function(a, b) { return d3.descending(a.value, b.value)}));
+	      svg.selectAll(".line").style("opacity", 0.15);
+	      svg.select('path#tag' + d.key + '.line')
+	        .style("stroke-width", 5)
+	        .style("opacity", 1);
+	      d3.selectAll(".legendcheckbox")
+	              .style("opacity", 0.15);
+	      d3.select("#legendRect" + d.key)
+	              .style("opacity", 1);   
+	    })
+	    .on("mouseout", function(d){
+	      svg.selectAll(".line").style("opacity", 1);
+	      svg.select('path#tag' + d.key + '.line')
+	      .style("stroke-width", 1.5);
+	      d3.selectAll(".legendcheckbox")
+	              .style("opacity", 1);
+	    });
+	
+
+	var maxWidth1 = Math.max.apply( null, $('text#legend-text.legend').map( function () {
+    	return $( this ).outerWidth( true );
+	}).get() );
+
+	// console.log(maxWidth1);
+
+ // 	$('text#legend-text.legend').each(function(){
+ // 		console.log($(this), 'width:' ,$(this).width(), 'outerWidth:', $(this).outerWidth())
+	// });
+
+	// ------------- v2 (worked)--------------
+
+	// // legend
+	// var legend = d3.select("svg").append("g")
+	//     .attr("font-family", "sans-serif")
+	//     .attr("font-size", 10)
+	//     .attr("text-anchor", "end")
+	//     .selectAll("g")
+	//     .data(nest, d => d.key)
+	//     .enter().append("g")
+	//         .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+	// legend.append("rect")
+	//     .attr("x", width + 120)
+	//     .attr("y", 30)
+	//     .attr("width", 19)
+	//     .attr("height", 19)
+	//     .attr("fill", d => color(d.key));
+
+	// legend.append("text")
+	//     .attr("x", width + 200)
+	//     .attr("y", 40)
+	//     .attr("dy", "0.32em")
+	//     .text(d => d.key);
+
+	// ------------------------------------------
+
+    </script>
+
+    	<!-- ver 1 -->
+	<!-- <input type="button" onclick="tableToExcel('dataTable', 'W3C Example Table')" value="Save 2"> -->
+	{% if request.user|has_group:"can_export" or request.user.is_superuser %}
+	<script>
+
+		var tableToExcel = (function() {
+
+  			var uri = 'data:application/vnd.ms-excel;base64,';
+    		var template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]</head><body><table>{table}</table></body></html>'
+    		, base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    		, format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+
+  			return function(table, name) {
+
+    			if (!table.nodeType) table = document.getElementById(table)
+    			var ctx = {worksheet: name || 'Worksheet', table: table.innerHTML}
+    			window.location.href = uri + base64(format(template, ctx))
+
+  			}
+
+		})()
+	</script>
+
+
+	<!-- ver 2 -->
+	{% if not error %}
+		<br><input class='button' type="button" value="Экспорт таблицы в XLSX" onclick="save_to_excel('xlsx');window.location='/vintages/export';">
+	{% endif %}
+	<!-- <script type="text/javascript" src="//unpkg.com/xlsx/dist/shim.min.js"></script> -->
+	<!-- <script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script> -->
+<!-- 	<script type="text/javascript" src="//unpkg.com/blob.js@1.0.1/Blob.js"></script>
+	<script type="text/javascript" src="//unpkg.com/file-saver@1.3.3/FileSaver.js"></script> -->
+	
+	<script type="text/javascript" src="{% static 'js/xlsx/shim.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/xlsx/xlsx.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/xlsx/Blob.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/xlsx/FileSaver.js' %}"></script>
+
+
+	<script type="text/javascript">
+		function save_to_excel(type, fn, dl) {
+			var elt = document.getElementById('dataTable');
+			var wb = XLSX.utils.table_to_book(elt, {sheet:"Sheet1"});
+			return dl ?
+				XLSX.write(wb, {bookType:type, bookSST:true, type: 'base64'}) :
+				XLSX.writeFile(wb, fn || ('vintages_out.' + (type || 'xlsx')));
+		}
+	</script>
+	{% endif %}
+
+{% endblock %}

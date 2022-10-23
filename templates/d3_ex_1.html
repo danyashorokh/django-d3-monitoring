@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!--<meta charset="utf-8">-->
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Example 1</title>
+
+        <style>
+            svg {
+                border: 1px solid #000;
+            }
+
+            /*.scaling {
+                height: 500px;
+            }*/
+        </style>
+        <script type="text/javascript" src="http://d3js.org/d3.v4.js" charset="utf-8"></script>
+    </head>
+    <body>
+       
+        <div class='example'>
+        </div>
+        <!--<script type="text/javascript" src="d3_ex_1.js" charset="utf-8"></script>-->
+
+        <script>
+
+
+            // var parseDate = d3.timeParse("%Y-%m");
+
+            // var dataArray = [2, 13, 15, 8, 17, 20, 8];
+
+            // var svg = d3.select(".rect").append("svg")
+            //     .attr('height', '100%')
+            //     .attr('width', '100%')
+            //     ;
+
+            // var rect = svg.selectAll('rect')
+            //     .data(dataArray)
+            //     .enter().append('rect')
+            //     .attr('height', function(d,i) { return d*10; })
+            //     .attr('width', '70')
+            //     .attr('fill', 'darkgreen')
+            //     .attr('x', function(d,i) {return 80*i;})
+            //     .attr('y', '120')
+            //     ;
+
+
+            var data = [100, 1200];
+            var w = 800;
+            var h = 800;
+
+            var scaling = d3.scaleLinear()
+                .domain([0, 1200])
+                .range([0, w])
+
+            console.log(d3);
+
+            var axis = d3.axisBottom(scaling)
+                .ticks(10)
+
+            var canvas = d3.select(".example")
+                .append("svg")
+                .attr('width', w)
+                .attr('height', h)
+                .append("g")
+                .attr("transform", "translate(30, 50)")
+                ;
+
+            var bars = canvas.selectAll("rect")
+                .data(data)
+                .enter().append("rect")
+                .attr('fill', "blue")
+                .attr('width', function(d) { return scaling(d); })
+                .attr('height', 20)
+                .attr('y', function(d, i) {return 80*i;})
+            ;
+
+
+        canvas.append("g")
+            .attr('tranform', "translate(100, 200)")
+            .call(axis);
+
+
+        </script>
+
+    </body>
+</html>

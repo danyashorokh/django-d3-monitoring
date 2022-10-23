@@ -1,0 +1,240 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+    <style>
+
+    
+
+    .axis {
+      font: 15px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      stroke-width: 2px;
+      shape-rendering: crispEdges;
+    }
+
+    .line {
+      fill: none;
+      stroke: #2f5491;
+      stroke-width: 5px;
+    }
+
+    .overlay {
+      fill: none;
+      pointer-events: all;
+    }
+
+    .focus circle {
+      fill: #F1F3F3;
+      stroke: #2f5491;
+      stroke-width: 5px;
+    }
+      
+    .hover-line {
+      stroke: #2f5491;
+      stroke-width: 2px;
+      stroke-dasharray: 3,3;
+    }
+
+    .g-hed {
+        text-align: left;
+        text-transform: uppercase;
+        font-weight: bold;
+        font-size:22px;
+        margin: 3px 0;
+      }
+
+
+  /*  DATA EXAMPLE
+
+    [
+      {date: '2018-03', count: 2000},
+      {date: '2018-04', count: 4000}
+    ]*/
+
+    </style>
+    <!-- <script src="http://d3js.org/d3.v3.js"></script> -->
+    <!-- <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script> -->
+    <script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+
+
+    <form method="post" action="/one_scorecard_counts/">
+        {% csrf_token %}
+        Choose scorecard
+        <select name='scorecard'>
+        {% for scorecard in scorecard_options %}
+          {% if cur_scorecard == scorecard %}
+            <option selected value='{{ scorecard }}'>{{ scorecard }}</option>
+          {% else %}
+            <option value='{{ scorecard }}'>{{ scorecard }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+        
+        Choose date from
+        <select name='date_from'>
+        {% for date in dates %}
+          {% if cur_date_from == date %}
+            <option selected value='{{ date }}'>{{ date }}</option>
+          {% else %}
+            <option value='{{ date }}'>{{ date }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+
+        <a>Choose date to</a>
+        <select name='date_upto'>
+        {% for date in dates %}
+          {% if cur_date_upto == date %}
+            <option selected value='{{ date }}'>{{ date }}</option>
+          {% else %}
+            <option value='{{ date }}'>{{ date }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+        <input type="submit" value="Submit">
+    </form>
+
+
+
+    <h5 class="g-hed"></h5>
+    <p class="g-intro"></p>
+  
+
+    <!--<script type="text/javascript" src="one_scorecard_counts.js"></script>-->
+
+    <script>
+
+    var margin = {top: 20, right: 150, bottom: 50, left: 50},
+        width = 1200 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        // .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var parseDate = d3.timeParse("%Y-%m"); // for dates like "2014-01-01"
+    //var parseDate = d3.time.format("%Y-%m-%dT00:00:00Z").parse;  // for dates like "2014-01-01T00:00:00Z"
+
+    //Divides date for tooltip placement
+    var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+
+
+    var x = d3.scaleTime().range([0, width]);
+    var y = d3.scaleLinear().range([height, 0]);
+
+    var xAxis = d3.axisBottom(x);
+    var yAxis = d3.axisLeft(y)
+        .ticks(6)
+        .tickFormat(function(d) { return parseInt(d / 1000) + "k"; });
+
+    var line = d3.line()
+        .x(function(d) { return x(d.date); })
+        .y(function(d) { return y(d.count); });
+
+    var g = svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+
+
+    var data = JSON.parse('{{ json | escapejs }}');
+
+      data.forEach(function(d) {
+        d.date = parseDate(d.date);
+        d.count = +d.count;
+
+      });
+
+      console.log(data);
+
+      x.domain(d3.extent(data, function(d) { return d.date; }));
+      y.domain([d3.min(data, function(d) { return d.count; }) / 1.005, 
+        d3.max(data, function(d) { return d.count; }) * 1.005]);
+
+      g.append("g")
+        .attr("class", "axis axis--x")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+      g.append("g")
+          .attr("class", "axis axis--y")
+          .call(yAxis)
+        .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "#5D6971")
+          .text("Count"); // y axis label
+
+      g.append("path")
+          .datum(data)
+          .attr("class", "line")
+          .attr("d", line);
+
+      // // example add bars
+      // g.selectAll("bar")
+      //   .data(data)
+      //   .enter().append("rect")
+      //   .attr("fill", "orange")
+      //   .attr("x", function(d) { return x(d.date); })
+      //   .attr("width", 10)
+      //   .attr("y", function(d) { return y(d.count); })
+      //   .attr("height", function(d) { return height - y(d.count); })
+
+      var focus = g.append("g")
+          .attr("class", "focus")
+          .style("display", "none");
+
+      focus.append("line")
+          .attr("class", "x-hover-line hover-line")
+          .attr("y1", 0)
+          .attr("y2", height);
+
+      focus.append("line")
+          .attr("class", "y-hover-line hover-line")
+          .attr("x1", width)
+          .attr("x2", width);
+
+      focus.append("circle")
+          .attr("r", 7.5);
+
+      focus.append("text")
+          .attr("x", 15)
+          .attr("dy", ".31em");
+
+      // mouse detection area
+      svg.append("rect")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+          .attr("class", "overlay")
+          .attr("width", width)
+          .attr("height", height)
+          .on("mouseover", function() { focus.style("display", null); })
+          .on("mouseout", function() { focus.style("display", "none"); })
+          .on("mousemove", mousemove);
+
+      function mousemove() {
+        var x0 = x.invert(d3.mouse(this)[0]), // convert x coordinate of the mouse to date using x-scaling
+            i = bisectDate(data, x0, 1), // check index of hover date
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        focus.attr("transform", "translate(" + x(d.date) + "," + y(d.count) + ")");
+        focus.select("text").text(function() { return d.count; }); // focus value
+        focus.select(".x-hover-line").attr("y2", height - y(d.count));
+        focus.select(".y-hover-line").attr("x2", width + width);
+      }
+
+      //Appends chart headline
+      d3.select(".g-hed").text('{{ cur_scorecard }}');
+
+    //});
+    </script>
+
+{% endblock %}

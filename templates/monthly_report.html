@@ -1,0 +1,4186 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+<style>
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+.inner {
+    margin: auto;
+    /*margin-top: 30pt;*/
+    padding:10pt;
+    /*border:2px solid red;*/
+    border-radius:4pt;
+    width:80%;
+    height:450px;
+    display: block;
+    vertical-align: middle;
+}
+
+p {
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 40px;
+}
+
+/* axis */
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+} 
+
+.axis-debt-x path {
+  display: none;
+}
+
+.axis-debt-y1 path {
+  display: none;
+}
+
+.axis-debt-y2 path {
+  display: none;
+}
+
+.axis-bucket-x path {
+  display: none;
+}
+
+.axis-bucket-y1 path {
+  display: none;
+}
+
+.axis-bucket-y2 path {
+  display: none;
+}
+
+.axis-ri-x path {
+  display: none;
+}
+
+.axis-ri-y path {
+  display: none;
+}
+
+.axis-mv-x path {
+  display: none;
+}
+
+.axis-mv-y1 path {
+  display: none;
+}
+
+.axis-mv-y2 path {
+  display: none;
+}
+
+.axis-nr-x path {
+  display: none;
+}
+
+.axis-nr-y1 path {
+  display: none;
+}
+
+.axis-nr-y2 path {
+  display: none;
+}
+
+.axis-volume-y1 path {
+  display: none;
+}
+
+.axis-volume-y2 path {
+  display: none;
+}
+
+
+.axis-volume_num-x path {
+  display: none;
+}
+
+.axis-volume_num-y1 path {
+  display: none;
+}
+
+.axis-volume_num-y2 path {
+  display: none;
+}
+
+.axis-lc-x path {
+  display: none;
+}
+
+.axis-lc-y path {
+  display: none;
+}
+.axis-means-x path {
+  display: none;
+}
+
+.axis-means-y path {
+  display: none;
+}
+
+.axis-approval-x path {
+  display: none;
+}
+
+.axis-approval-y path {
+  display: none;
+}
+
+.axis-ni--y path {
+  display: none;
+}
+
+/*g.chart3 > g.axis--y1 text{
+  fill: red;
+}
+*/
+
+/* axis text */
+.axis-debt-y2 text{
+  fill: blue;
+}
+
+.axis-bucket-y2 text{
+  fill: blue;
+}
+
+.axis-mv-y2 text{
+  fill: red;
+}
+
+.axis-volume-y2 text{
+  fill: blue;
+}
+
+.axis-volume_num-y2 text{
+  fill: blue;
+}
+
+.axis-ni--y1 text{
+  fill: blue;
+}
+
+/* dots */
+.dot-ni-positive {
+fill: blue;
+}
+.dot-ni-negative {
+fill: red;
+}
+
+.bar-positive { fill: #228B22; }
+.bar-negative { fill: brown; }
+
+/*grid lines*/
+.grid-ri-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-ri-y path {
+  stroke-width: 0;
+}
+
+.grid-mv-y1 line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-mv-y1 path {
+  stroke-width: 0;
+}
+
+.grid-nr-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-nr-y path {
+  stroke-width: 0;
+}
+
+.grid-lc-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-lc-y path {
+  stroke-width: 0;
+}
+
+.grid-means-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-means-y path {
+  stroke-width: 0;
+}
+
+.grid-approval-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-approval-y path {
+  stroke-width: 0;
+}
+
+.grid-nr-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-nr-y path {
+  stroke-width: 0;
+}
+
+.grid-roll_rate12-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-roll_rate12-y path {
+  stroke-width: 0;
+}
+
+.grid-roll_rate13-y line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    stroke-dasharray: 6,6;
+    shape-rendering: crispEdges;
+}
+
+.grid-roll_rate13-y path {
+  stroke-width: 0;
+}
+
+/* color lines */
+
+.line-debt {
+  fill: none;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+.line-bucket {
+  fill: none;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+.line-duration {
+  fill: none;
+  stroke: red;
+  stroke-width: 3px;
+  stroke-dasharray: 6,6;
+}
+
+.line-volume {
+  fill: none;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+.line-volume_num {
+  fill: none;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+path {
+  fill: none;
+}
+
+.overlay {
+      fill: none;
+      pointer-events: all;
+}
+
+.focus circle {
+  fill: #fff;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+div.linetooltip {
+  position: absolute;
+  text-align: center;
+/*  width: 100px;
+  height: 28px;*/
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 1px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.g-hed {
+        text-align: center;
+        text-transform: uppercase;
+        font-family: 'Snell';
+        font-weight: bold;
+        font-size:22px;
+        /*font-style: italic;*/
+        margin: 3px 0;
+        color: blue;
+}
+
+.rect_debt_legend{
+  cursor: pointer;
+}
+
+.rect_bucket_legend{
+  cursor: pointer;
+}
+
+.rect_volume_legend{
+  cursor: pointer;
+}
+
+.rect_volume_num_legend{
+  cursor: pointer;
+}
+
+</style>
+
+
+<script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+<!-- <script type="text/javascript" src="{% static 'js/jquery.chained.min.js' %}"></script> -->
+
+
+<!-- charts -->
+<div class="outer">
+
+    <!-- Портфель debts -->
+    <div class="inner">
+        <p class="g-hed chart1-header"></p>
+        <div class='radio_debt'>
+
+          {% for debt in debt_fields %}
+          <label class='radio-inline'>
+            {% if forloop.counter == 1 %}
+              <input type="radio" name="debt" value="{{ debt }}" onclick="
+              draw_debt(filter_json(debt_share, 'variable', this.value), 
+                filter_json(debt_sum, 'variable', this.value));
+              " checked> {{ debt }}
+            {% else %}
+            <input type="radio" name="debt" value="{{ debt }}" onclick="
+              draw_debt(filter_json(debt_share, 'variable', this.value), 
+                filter_json(debt_sum, 'variable', this.value));
+              "> {{ debt }}
+            {% endif %}
+          </label>
+          {% endfor %}
+        </div>
+        <svg id="chart1" width="1100" height="650"></svg>
+    </div>
+
+    <!-- Бакеты просрочки -->
+    <div class="inner" style="margin-top: 100px">
+
+        <p class="g-hed chart2-header"></p>
+        <div class='radio_bucket_types'>
+
+            {% for bucket_type in bucket_types %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="bucket_type" value="{{ bucket_type }}" onclick="
+                draw_buckets(filter_json(buckets, 'variable', this.value));
+                " checked> {{ bucket_type }}
+              {% else %}
+              <input type="radio" name="bucket_type" value="{{ bucket_type }}" onclick="
+                draw_buckets(filter_json(buckets, 'variable', this.value));
+                "> {{ bucket_type }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart2" width="1200" height="750"></svg>
+    </div>
+
+    <!-- Объемы выдач (руб.) -->
+    <div class="inner" style="margin-top: 400px">
+        <p class="g-hed chart8-header"></p>
+        <div class='radio_volumes'>
+
+          {% for volumes in volume_fields %}
+          <label class='radio-inline'>
+            {% if forloop.counter == 1 %}
+              <input type="radio" name="volumes" value="{{ volumes }}" onclick="
+              draw_volume(filter_json(json_volumes_rub, 'variable', this.value), 
+                filter_json(json_volumes_rub_total, 'variable', this.value));
+              " checked> {{ volumes }}
+            {% else %}
+            <input type="radio" name="volumes" value="{{ volumes }}" onclick="
+              draw_volume(filter_json(json_volumes_rub, 'variable', this.value), 
+                filter_json(json_volumes_rub_total, 'variable', this.value));
+              "> {{ volumes }}
+            {% endif %}
+          </label>
+          {% endfor %}
+        </div>
+        <svg id="chart8" width="1100" height="750"></svg>
+    </div>
+
+
+    <!-- Объемы выдач (шт.) -->
+    <div class="inner" style="margin-top: 200px">
+        <p class="g-hed chart9-header"></p>
+        <svg id="chart9" width="1100" height="650"></svg>
+    </div>
+
+    <!-- Approval rate -->
+    <div class="inner" style="margin-top: 100px">
+        <p class="g-hed chart10-header"></p>
+        <svg id="chart10" width="1200" height="650"></svg>
+    </div>
+
+    <!-- Risk indicators -->
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart3-header"></p>
+        <div class='radio_ri_types'>
+
+            {% for product in products_for_indicators %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type3" value="{{ product }}" onclick="
+                draw_ri(filter_json(risk_indicators, 'product', this.value));
+                " checked> {{ product }}
+              {% else %}
+              <input type="radio" name="product_type3" value="{{ product }}" onclick="
+                draw_ri(filter_json(risk_indicators, 'product', this.value));
+                "> {{ product }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart3" width="1200" height="700"></svg>
+    </div>
+
+    <!-- Средние la, lc, duration по всем продуктам -->
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart6-header"></p>
+        <div class='radio_means'>
+
+            {% for charact in product_charact %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type6" value="{{ charact }}" onclick="
+                draw_means(filter_json(json_means, 'variable', this.value));
+                " checked> {{ charact }}
+              {% else %}
+              <input type="radio" name="product_type6" value="{{ charact }}" onclick="
+                draw_means(filter_json(json_means, 'variable', this.value));
+                "> {{ charact }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart6" width="1200" height="700"></svg>
+    </div>
+
+    <!-- Разница между lc_plan и lc_fact -->
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart7-header"></p>
+        <div class='radio_lc_values_types'>
+
+            {% for product in products_for_mean_values %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type7" value="{{ product }}" onclick="
+                draw_lc_lc_diff(filter_json(json_lc_lc_diff, 'product', this.value));
+                " checked> {{ product }}
+              {% else %}
+              <input type="radio" name="product_type7" value="{{ product }}" onclick="
+                draw_lc_lc_diff(filter_json(json_lc_lc_diff, 'product', this.value));
+                "> {{ product }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart7" width="1200" height="700"></svg>
+    </div>
+
+    <!-- Средние la, lc, duration в разбивке по продуктам -->
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart4-header"></p>
+        <div class='radio_mean_values_types'>
+
+            {% for product in products_for_mean_values %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type4" value="{{ product }}" onclick="
+                draw_mv(filter_json(json_mean_values, 'product', this.value));
+                " checked> {{ product }}
+              {% else %}
+              <input type="radio" name="product_type4" value="{{ product }}" onclick="
+                draw_mv(filter_json(json_mean_values, 'product', this.value));
+                "> {{ product }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart4" width="1200" height="700"></svg>
+    </div>
+
+    <!-- Net revenue -->
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart5-header"></p>
+        <div class='radio_nr_types'>
+
+            <label class='radio-inline'>
+                <input type="radio" name="nr" value="all" onclick="
+                draw_net_revenue(json_net_revenue, this.value);
+                " checked> all
+            </label>
+
+            <label class='radio-inline'>
+                <input type="radio" name="nr" value="cl" onclick="
+                draw_net_revenue(json_net_revenue, this.value);
+                "> cl
+            </label>
+
+            <label class='radio-inline'>
+                <input type="radio" name="nr" value="pd" onclick="
+                draw_net_revenue(json_net_revenue, this.value);
+                "> pd
+            </label>
+
+        </div>
+        <svg id="chart5" width="1200" height="700"></svg>
+    </div>
+
+<!-- 
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart11-header"></p>
+        <div class='radio_net_income'>
+
+            {% for product in products_for_income %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type11" value="{{ product }}" onclick="
+                draw_net_income(filter_json(json_net_income, 'product', this.value));
+                " checked> {{ product }}
+              {% else %}
+              <input type="radio" name="product_type11" value="{{ product }}" onclick="
+                draw_net_income(filter_json(json_net_income, 'product', this.value));"> {{ product }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart11" width="1200" height="700"></svg>
+    </div> -->
+
+    <!-- Roll rate core -->
+     <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart12-header"></p>
+        <div class='radio_roll_rate_core'>
+
+            {% for charact in roll_rate_variables %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type12" value="{{ charact }}" onclick="
+                draw_roll_rate(filter_json(json_roll_rate_core, 'variable', this.value), g12,'12');
+                " checked> {{ charact }}
+              {% else %}
+              <input type="radio" name="product_type12" value="{{ charact }}" onclick="
+                draw_roll_rate(filter_json(json_roll_rate_core, 'variable', this.value), g12,'12');
+                "> {{ charact }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart12" width="1200" height="700"></svg>
+    </div>
+
+    <!-- Roll rate digital -->
+    <div class="inner" style="margin-top: 200px">
+
+        <p class="g-hed chart13-header"></p>
+        <div class='radio_roll_rate_digital'>
+
+            {% for charact in roll_rate_variables %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type13" value="{{ charact }}" onclick="
+                draw_roll_rate(filter_json(json_roll_rate_digital, 'variable', this.value), g13,'13');
+                " checked> {{ charact }}
+              {% else %}
+              <input type="radio" name="product_type13" value="{{ charact }}" onclick="
+                draw_roll_rate(filter_json(json_roll_rate_digital, 'variable', this.value), g13,'13');
+                "> {{ charact }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart13" width="1200" height="700"></svg>
+    </div>
+
+    <!-- Net income -->
+    <div class="inner" style="margin-top: 300px;">
+
+        <p class="g-hed chart15-header"></p>
+        <div class='radio_net_income2'>
+
+            {% for charact in products_for_income_all %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="product_type-ni" value="{{ charact }}" onclick="
+                draw_net_income(filter_json(json_net_income2, 'product', this.value), filter_json(json_net_income, 'product', this.value));
+                " checked> {{ charact }}
+              {% else %}
+              <input type="radio" name="product_type-ni" value="{{ charact }}" onclick="
+                draw_net_income(filter_json(json_net_income2, 'product', this.value), filter_json(json_net_income, 'product', this.value));
+                "> {{ charact }}
+              {% endif %}
+            </label>
+            {% endfor %}
+        </div>
+        <svg id="chart15" width="1100" height="780"></svg>
+    </div>
+
+
+</div>
+
+
+
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+
+<script>
+
+// date formatting
+var parseDate = d3.timeParse("%Y-%m");
+var formatFloat = d3.format(".2f");
+var formatBillion = function(x) { return formatFloat(x / 1e9) + 'B'; };
+var formatMillion = function(x) { return formatFloat(x / 1e6) + 'M'; };
+
+
+// debts
+var debt_share = JSON.parse('{{ debt_share | escapejs }}');
+var debt_sum = JSON.parse('{{ debt_sum | escapejs }}');
+var debt_keys = JSON.parse('{{ debt_keys | escapejs }}');
+
+// buckets
+var buckets = JSON.parse('{{ json_buckets | escapejs }}');
+var buckets_keys = JSON.parse('{{ buckets_keys | escapejs }}');
+var cor = JSON.parse('{{ json_cor | escapejs }}');
+
+// risk indicators
+var risk_indicators = JSON.parse('{{ risk_indicators | escapejs }}');
+// var products = JSON.parse('{{ products | escapejs }}');
+
+// mean values
+var json_mean_values = JSON.parse('{{ json_mean_values | escapejs }}');
+
+//lc_lc_diff
+var json_lc_lc_diff =  JSON.parse('{{ json_lc_lc_diff | escapejs }}');
+
+//means
+var json_means =  JSON.parse('{{ json_means | escapejs }}');
+
+// net revenue
+var json_net_revenue = JSON.parse('{{ json_net_revenue | escapejs }}');
+
+// volumes
+var json_volumes_rub = JSON.parse('{{ json_volumes_rub | escapejs }}');
+var json_volumes_rub_total = JSON.parse('{{ json_volumes_rub_total | escapejs }}');
+
+// volumes num
+var json_volumes_num = JSON.parse('{{ json_volumes_num | escapejs }}');
+var json_volumes_num_total = JSON.parse('{{ json_volumes_num_total | escapejs }}');
+
+// approval rate
+var json_approval_rate = JSON.parse('{{ json_approval_rate | escapejs }}');
+
+// net income
+var json_net_income = JSON.parse('{{ json_net_income | escapejs }}');
+var json_net_income2 = JSON.parse('{{ json_net_income2 | escapejs }}');
+
+// roll rate
+var roll_rate_keys = JSON.parse('{{ roll_rate_keys | escapejs }}');
+var json_roll_rate_core = JSON.parse('{{ json_roll_rate_core | escapejs }}');
+var json_roll_rate_digital = JSON.parse('{{ json_roll_rate_digital | escapejs }}');
+
+//format the data
+debt_share.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+debt_sum.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+buckets.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+cor.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+risk_indicators.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_mean_values.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_net_revenue.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+// new
+json_volumes_rub.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+json_volumes_rub_total.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+json_volumes_num.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_volumes_num_total.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_lc_lc_diff.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_means.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_approval_rate.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_net_income.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_net_income2.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_roll_rate_core.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+json_roll_rate_digital.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+
+console.log('debt_keys\n', debt_keys);
+console.log('debt_share\n', debt_share);
+console.log('debt_sum\n', debt_sum);
+
+console.log('buckets_keys\n', buckets_keys);
+console.log('buckets\n', buckets);
+console.log('cor\n', cor);
+
+console.log('risk_indicators\n', risk_indicators);
+console.log('json_mean_values\n', json_mean_values);
+console.log('json_lc_lc_diff\n', json_lc_lc_diff);
+console.log('json_means\n', json_means);
+console.log('json_net_revenue\n', json_net_revenue);
+
+
+/////-----------------------
+  
+
+/////-----------------------
+
+
+// filter function
+function filter_json(json, key, value) {
+
+  var result = [];
+  json.forEach(function(val, idx, arr){
+    if(val[key] == value){
+      result.push(val);
+    }
+  });
+  // console.log('filter by', value, '\n', result);
+  // draw_debt(result);
+  return result;
+}
+
+//------------------------  CHART 1 [Портфель debts] -----------------------
+
+
+function draw_debt(data, data_sum) {
+
+  var stack_debt = d3.stack()
+    .keys(debt_keys)
+    .offset(d3.stackOffsetNone)
+    ;
+
+  var area = d3.area()
+    .x(function(d, i) { return xScaleDebt(d.data.date); })
+    .y0(function(d) { return yScaleDebt1(d[0]); })
+    // .y1(function(d) { return y1(d[1]); });
+    ;
+
+  // define line
+  var valueline_debt = d3.line()
+      .x(function(d) { return xScaleDebt(d.date); })
+      .y(function(d) { return yScaleDebt2(d.value); })
+      .curve(d3.curveCardinal);
+
+  xScaleDebt.domain(d3.extent(data, function(d) { return d.date; }));
+  yScaleDebt2.domain([0, d3.max(data_sum, function(d) { return d.value; }) * 1.1]);
+  
+  color1.domain(debt_keys);
+
+  var layer_debt = g1.selectAll(".debt_layer")
+    .remove() // reload
+    .exit()
+    .data(stack_debt(data));
+
+  layer_debt.enter().append("g")
+   
+    .append("path")
+    .attr("class", "debt_layer")
+    .attr("id", (d,i) => "area_debt_" + d.key)
+
+    .style("fill", function(d) { return color1(d.key); })
+    .attr("d", area)
+    // .attr("d", function(d) { return area(d.values); })
+    .on("mouseover", function() { 
+        tooltip_debt.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip_debt.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+
+        var xPosition = d3.mouse(this)[0] - 30;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        var x0 = xScaleDebt.invert(d3.mouse(this)[0]),
+        i = bisectDate(data, x0, 1),
+        d0 = data[i - 1],
+        d1 = data[i],
+        values = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        // console.log(values);
+
+        tooltip_debt.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip_debt.select("text")
+          .text(d.key + ': ' + formatFloat(100*values[d.key]) + '%')
+
+    });
+
+    // add line
+    d3.selectAll(".line-debt").remove();
+
+    g1.append("path")
+        .datum(data_sum)
+        .attr("class", "line-debt")
+        .attr("d", valueline_debt)
+        ;
+
+    d3.selectAll(".axis-debt-x").remove();
+    d3.selectAll(".axis-debt-y1").remove();
+    d3.selectAll(".axis-debt-y2").remove();
+
+
+    g1.append("g")
+    .attr("class", "axis axis-debt-x")
+    .attr("transform", "translate(0," + height1 + ")")
+    .call(xAxisDebt);
+
+    g1.append("g")
+        .attr("class", "axis axis-debt-y1")
+        .call(yAxisDebt1)
+        .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -50)
+          .attr("dy", ".9em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "#5D6971")
+          .text("Share");
+
+    // Add the Y2 Axis
+    g1.append("g")
+        .attr("class", "axis axis-debt-y2")
+        .attr("transform", "translate( " + width1 + ", 0 )")
+        .call(yAxisDebt2)
+        .append("text")
+            .attr("class", "axis-title")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 55)
+            .attr("dy", ".9em")
+            .style("text-anchor", "end") // label align
+            .attr("fill", "blue")
+            .text("Total porfolio, rur"); // y axis label
+
+} //end update
+
+
+// create the svg 1
+var svg1 = d3.select("#chart1");
+var margin = {top: 30, right: 100, bottom: 330, left: 50};
+var width1 = +svg1.attr("width") - margin.left - margin.right;
+var height1 = +svg1.attr("height") - margin.top - margin.bottom;
+
+var g1 = svg1.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart1");
+
+var xScaleDebt = d3.scaleTime().range([0, width1]);
+var yScaleDebt1 = d3.scaleLinear().range([height1, 0]);
+var yScaleDebt2 = d3.scaleLinear().range([height1, 0]);
+
+var color1 = d3.scaleOrdinal(d3.schemeCategory20);
+// var color = d3.scaleOrdinal()
+//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var xAxisDebt = d3.axisBottom(xScaleDebt).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisDebt1 =  d3.axisLeft(yScaleDebt1).ticks(10, "%");
+var yAxisDebt2 =  d3.axisRight(yScaleDebt2).ticks(10).tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart1-header").text('Портфель');
+
+// legend
+var legend_debt = g1.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .data(debt_keys)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+        
+legend_debt.append("rect")
+    .attr("x", 3)
+    .attr("y", height1 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color1)
+    .attr("class", 'rect_debt_legend')
+    .attr("id", (d, i) => "rect_debt_legend_" + debt_keys[i])
+  
+    .on("mouseover", function(d, i){       
+        // area
+        cur_key = debt_keys[i]
+        // console.log(cur_key);
+
+        var hide_debt_list = debt_keys.slice(debt_keys.indexOf(cur_key) + 1, debt_keys.length);
+        
+        // svg.selectAll("path.debt_layer").style("opacity", 0.0);
+        // svg.selectAll('path#area_debt_' + cur_key).style("opacity", 1);
+
+        svg1.selectAll("path.debt_layer").style("fill", "#fff");
+        svg1.selectAll('path#area_debt_' + cur_key).style("fill", function(d) { return color1(debt_keys[i]); })
+
+        if (hide_debt_list.length > 0) {
+          for (var i = 0; i < hide_debt_list.length; i++) {
+            // svg.selectAll('path#area_debt_' + hide_debt_list[i]).style("opacity", 0.0);
+            svg1.selectAll('path#area_debt_' + hide_debt_list[i]).style("fill", "#fff");
+          }
+        }
+
+        // svg.selectAll("path:not(#area_debt_" + cur_key + ")").style("opacity", 0.1);; 
+        
+        // rect
+        svg1.selectAll('.rect_debt_legend').style("opacity", 0.1);
+        d3.select(this).style("opacity", 1);
+      })
+
+      .on("mouseout", function(d, i){      
+        // area
+        // svg.selectAll("path.debt_layer").style("opacity", 1);
+        // console.log(debt_keys);
+        svg1.selectAll("path.debt_layer").style("fill", function(d, i) { return color1(d.key); })
+        // rect 
+        svg1.selectAll('rect.rect_debt_legend').style("opacity", 1);
+
+      });
+
+legend_debt.append("text")
+    .attr("x", 30)
+    .attr("y", height1 + 30 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for right chart
+g1.append("line")
+    .attr("x1", width1 - 35)
+    .attr("x2", width1)
+    .attr("y1", height1 + 35)
+    .attr("y2", height1 + 35)
+    .style("stroke-width", 4)
+    .style("stroke", 'blue');
+
+g1.append("text")
+    .attr("x", width1 - 44)
+    .attr("y", height1 + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Total portfolio, rur");
+
+// tooltip bits, initial display is hidden
+var tooltip_debt = svg1.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip_debt.append("rect")
+    .attr("width", 170)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.6);
+
+tooltip_debt.append("text")
+    .attr("x", 85)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+// base init
+// debtNest = d3.nest()
+//   .key(d =>  d.variable) //.sortKeys(d3.ascending)
+//   .entries(debt_share);
+
+// generate initial graph using first series name
+// cur_debt = debtNest[0].key;
+// draw_debt(filter_json(debt_share, 'variable', cur_debt), filter_json(debt_sum, 'variable', cur_debt));
+
+draw_debt(filter_json(debt_share, 'variable', '{{ debt_fields.0 }}'), filter_json(debt_sum, 'variable',  '{{ debt_fields.0 }}'));
+
+
+//------------------------  CHART 2 [Бакеты просрочки] ------------------------
+
+function draw_buckets(data) {
+
+  var stack_bucket = d3.stack()
+    .keys(buckets_keys)
+    .order(d3.stackOrderNone)
+    .offset(d3.stackOffsetNone)
+    ;
+
+  // console.log('stack(data)\n', stack(data));
+  var area_bucket = d3.area()
+    .x(function(d, i) { return xScaleBucket(d.data.date); })
+    .y0(function(d) { return yScaleBucket1(d[0]); })
+    .y1(function(d) { return yScaleBucket1(d[1]); });
+    ;
+
+  var maxDateVal = d3.max(data, function(d){
+    var vals = d3.keys(d).map(function(key){ return (key !== 'date') ? d[key] : 0 });
+    return d3.sum(vals);
+  });
+
+  // define line
+  var valueline_bucket = d3.line()
+      .x(function(d) { return xScaleBucket(d.date); })
+      .y(function(d) { return yScaleBucket2(d.value); })
+      .curve(d3.curveCardinal)
+      ;
+
+  xScaleBucket.domain(d3.extent(data, function(d) { return d.date; }));
+  yScaleBucket1.domain([0, maxDateVal]);
+  yScaleBucket2.domain([0, d3.max(cor, function(d) { return d.value; }) * 1.005]);
+
+
+  // buckets_keys = d3.values(stack_bucket(data))
+  // .map(function(d) { return d.key; });
+  
+  color2.domain(buckets_keys);
+
+  var layer_bucket = g2.selectAll(".bucket_layer")
+    .remove() // reload
+    .exit()
+    .data(stack_bucket(data));
+
+  layer_bucket.enter().append("g")
+   
+    .append("path")
+    .attr("class", "bucket_layer")
+    .attr("id", (d,i) => "area_bucket_" + d.key)
+
+    .style("fill", function(d) { return color2(d.key); })
+    .attr("d", area_bucket)
+    // .attr("d", function(d) { return area(d.values); })
+    .on("mouseover", function() { 
+        tooltip_bucket.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip_bucket.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+      // console.log(d);
+        var xPosition = d3.mouse(this)[0] + 30;
+        var yPosition = d3.mouse(this)[1] + 60;
+
+        var x0 = xScaleBucket.invert(d3.mouse(this)[0]),
+        i = bisectDate(data, x0, 1),
+        d0 = data[i - 1],
+        d1 = data[i],
+        values = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        // console.log(values);
+
+        tooltip_bucket.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip_bucket.select("text")
+          .text(d.key + ': ' + formatFloat(values[d.key]))
+
+    });
+
+    // add line
+    // d3.selectAll(".line-bucket").remove();
+
+    g2.append("path")
+        .datum(cor)
+        .attr("class", "line-bucket")
+        .attr("d", valueline_bucket)
+        ;
+
+    d3.selectAll(".axis-bucket-x").remove();
+    d3.selectAll(".axis-bucket-y1").remove();
+    d3.selectAll(".axis-bucket-y2").remove();
+
+
+    g2.append("g")
+    .attr("class", "axis axis-bucket-x")
+    .attr("transform", "translate(0," + height2 + ")")
+    .call(xAxisBucket);
+
+    g2.append("g")
+        .attr("class", "axis axis-bucket-y1")
+        .call(yAxisBucket1)
+        .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -55)
+          .attr("dy", ".9em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "#5D6971")
+          .text("Sum");
+
+    // Add the Y2 Axis
+    g2.append("g")
+        .attr("class", "axis axis-bucket-y2")
+        .attr("transform", "translate( " + width2 + ", 0 )")
+        .call(yAxisBucket2)
+        .append("text")
+            .attr("class", "axis-title")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 55)
+            .attr("dy", ".9em")
+            .style("text-anchor", "end") // label align
+            .attr("fill", "blue")
+            .text("Cost of risks"); // y axis label
+
+} //end update
+
+
+// create the svg 2
+var svg2 = d3.select("#chart2");
+var margin = {top: 100, right: 150, bottom: 280, left: 100};
+var width2 = +svg2.attr("width") - margin.left - margin.right;
+var height2 = +svg2.attr("height") - margin.top - margin.bottom;
+
+var g2 = svg2.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart2");
+
+var xScaleBucket = d3.scaleTime().range([0, width2]);
+var yScaleBucket1 = d3.scaleLinear().range([height2, 0]);
+var yScaleBucket2 = d3.scaleLinear().range([height2, 0]);
+
+var color2 = d3.scaleOrdinal(d3.schemeCategory20);
+// var color = d3.scaleOrdinal()
+//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var xAxisBucket = d3.axisBottom(xScaleBucket).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisBucket1 =  d3.axisLeft(yScaleBucket1).tickFormat(formatBillion);
+var yAxisBucket2 =  d3.axisRight(yScaleBucket2).ticks(10).tickFormat(formatFloat);
+
+// chart title
+d3.select(".chart2-header").text('Бакеты просрочки');
+
+// legend
+var legend_bucket = g2.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .data(buckets_keys)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+        
+legend_bucket.append("rect")
+    .attr("x", 3)
+    .attr("y", height2 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color2)
+    .attr("class", 'rect_bucket_legend')
+    .attr("id", (d, i) => "rect_bucket_legend_" + buckets_keys[i])
+  
+    .on("mouseover", function(d, i){       
+        // area
+        cur_key = buckets_keys[i]
+
+        var hide_bucket_list = buckets_keys.slice(buckets_keys.indexOf(cur_key) + 1, buckets_keys.length); // labels to hide
+        
+        svg2.selectAll("path.bucket_layer").style("fill", "#fff");
+        svg2.selectAll('path#area_bucket_' + cur_key).style("fill", function(d) { return color2(buckets_keys[i]); })
+
+        if (hide_bucket_list.length > 0) {
+          for (var i = 0; i < hide_bucket_list.length; i++) {
+            // svg.selectAll('path#area_bucket_' + hide_bucket_list[i]).style("opacity", 0.0);
+            svg2.selectAll('path#area_bucket_' + hide_bucket_list[i]).style("fill", "#fff");
+          }
+        }
+        
+        // rect
+        svg2.selectAll('.rect_bucket_legend').style("opacity", 0.1);
+        d3.select(this).style("opacity", 1);
+      })
+
+      .on("mouseout", function(d, i){      
+        // area
+        // svg.selectAll("path.bucket_layer").style("opacity", 1);
+        // console.log(buckets_keys);
+        svg2.selectAll("path.bucket_layer").style("fill", function(d, i) { return color2(d.key); })
+        // rect 
+        svg2.selectAll('rect.rect_bucket_legend').style("opacity", 1);
+
+      });
+
+legend_bucket.append("text")
+    .attr("x", 30)
+    .attr("y", height2 + 30 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for right chart
+g2.append("line")
+    .attr("x1", width2 - 35)
+    .attr("x2", width2)
+    .attr("y1", height2 + 35)
+    .attr("y2", height2 + 35)
+    .style("stroke-width", 4)
+    .style("stroke", 'blue');
+
+g2.append("text")
+    .attr("x", width2 - 44)
+    .attr("y", height2 + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Cost of risks");
+
+// tooltip bits, initial display is hidden
+var tooltip_bucket = svg2.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip_bucket.append("rect")
+    .attr("width", 180)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.6);
+
+tooltip_bucket.append("text")
+    .attr("x", 90)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+// base init
+bucketNest = d3.nest()
+  .key(d =>  d.variable) //.sortKeys(d3.ascending)
+  .entries(buckets);
+
+// console.log(bucketNest);
+
+// generate initial graph using first series name
+cur_bucket_type = bucketNest[0].key;
+draw_buckets(filter_json(buckets, 'variable', cur_bucket_type));
+
+
+//------------------------  CHART 3 [Risk indicators] ------------------------
+
+function draw_ri(data) {
+
+  var riNest = d3.nest()
+    .key(function(d){
+      return d.indicator;
+    })
+    .entries(data);
+
+  // console.log(riNest);
+
+  var ri_keys = d3.values(riNest)
+  .map(function(d) { return d.key; })
+  .filter(function(key) { return key !== "date"; });
+  // console.log(ri_keys);
+
+  // console.log('riNest in function\n', riNest);
+
+  xScaleRI.domain(d3.extent(data, function(d) { return d.date; }));
+  yScaleRI.domain([d3.min(data, function(d) { return d.value; }) * 1.1, d3.max(data, function(d) { return d.value; }) * 1.1]);
+
+  color3.domain(ri_keys);
+
+  // Define the line
+  var valueLine = d3.line()
+      .x(function(d) { return xScaleRI(d.date); })
+      .y(function(d) { return yScaleRI(d.value); })
+
+  g3.selectAll(".line-ri")
+    .remove() // reload
+    .exit()
+    .data(riNest)
+    .enter()
+    .append("path")
+        .attr("class", "line-ri")
+        .attr("linekey", d => d.key)
+        .attr("d", function(d){ return valueLine(d.values)})
+        .style("stroke", function(d,i) { return color3(d.key); })
+        .style("stroke-width", 2)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)")
+        .on("mouseover", function(d) {
+
+        })
+        .on("mouseout", function(d) {
+
+        });
+
+  d3.selectAll(".axis-ri-x").remove();
+  d3.selectAll(".axis-ri-y").remove();
+  d3.selectAll(".grid-ri-y").remove();
+
+  d3.selectAll(".mouse-over-effects-ri").remove();
+
+  g3.append("g")
+  .attr("class", "axis axis-ri-x")
+  .attr("transform", "translate(0," + height3 + ")")
+  .call(xAxisRI);
+
+  g3.append("g")
+      .attr("class", "axis axis-ri-y")
+      .call(yAxisRI)
+      .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -55)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Indicator");
+
+  // add the Y gridlines
+  g3.append("g")     
+      .attr("class", "grid-ri-y")
+      .call(d3.axisLeft(yScaleRI)
+          .tickSize(-width3)
+          .tickFormat("")
+      )
+
+  // ------- Mouse tooltip -------
+
+  var mouseG3 = g3.append("g")
+      .attr("class", "mouse-over-effects-ri");
+
+  mouseG3.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-ri-line")
+      .style("stroke", "grey")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  var lines3 = document.getElementsByClassName('line-ri');
+
+  var mousePerLine3 = mouseG3.selectAll('.mouse-per-ri-line')
+      .data(riNest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-ri-line");
+
+  mousePerLine3.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color3(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine3.append("text")
+      .attr("transform", "translate(10,3)");
+
+  mouseG3.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width3) // can't catch mouse events on a g element
+      .attr('height', height3)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-ri-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-ri-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-ri-line text")
+          .style("opacity", "0");
+      })
+      .on('mouseover', function() { // on mouse in show line, circles and text
+        d3.select(".mouse-ri-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-ri-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-ri-line text")
+          .style("opacity", "1");
+      })
+      .on('mousemove', function() { // mouse moving over canvas
+        var mouse = d3.mouse(this);
+        d3.select(".mouse-ri-line")
+          .attr("d", function() {
+            var d = "M" + mouse[0] + "," + height3;
+            d += " " + mouse[0] + "," + 0;
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-ri-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleRI.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines3[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines3[i].getPointAtLength(beginning);
+            var line_coord_end = lines3[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines3[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleRI.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+    });
+
+} //end update
+
+// create the svg 3
+var svg3 = d3.select("#chart3");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width3 = +svg3.attr("width") - margin.left - margin.right;
+var height3 = +svg3.attr("height") - margin.top - margin.bottom;
+
+var g3 = svg3.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart3");
+
+var xScaleRI = d3.scaleTime().range([0, width3]);
+var yScaleRI = d3.scaleLinear().range([height3, 0]);
+
+var color3 = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisRI = d3.axisBottom(xScaleRI).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisRI =  d3.axisLeft(yScaleRI);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart3-header").text('Рисковые индикаторы');
+
+// base init
+riNest = d3.nest()
+  .key(d =>  d.indicator) //.sortKeys(d3.ascending)
+  .entries(risk_indicators);
+// console.log(riNest);
+
+
+// legend
+var legend_ri = g3.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .data(riNest, d => d.key)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+legend_ri.append("rect")
+    .attr("x", 3)
+    .attr("y", height3 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", function(d) { return color3(d.key); })
+    .attr("class", 'rect_ri_legend')
+    .attr("id", (d, i) => "rect_ri_legend_" + d.key)
+  
+    .on("mouseover", function(d, i) {       
+      })
+
+    .on("mouseout", function(d, i) {      
+
+    });
+
+legend_ri.append("text")
+    .attr("x", 30)
+    .attr("y", height3 + 30 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d.key; });
+
+
+// generate initial graph using first series name
+draw_ri(filter_json(risk_indicators, 'product', "{{ products_for_indicators.0 }}"));
+
+
+//------------------------  CHART 4 [Средние la, lc, duration в разбивке по продуктам] ------------------------
+
+function draw_mv(data) {
+
+  var mean_values = d3.values(data)
+  .filter(function(d) { return d.label !== "duration"; });
+  var mean_duration = d3.values(data)
+    .filter(function(d) { return d.label == "duration"; });
+
+  var mvNest = d3.nest()
+    .key(function(d){
+      return d.label;
+    })
+    .entries(mean_values);
+
+  var mv_keys = d3.values(mvNest)
+    .map(function(d) { return d.key; });
+  // console.log(ri_keys);
+
+  // console.log('riNest in function\n', riNest);
+
+  xScaleMV.domain(d3.extent(mean_values, function(d) { return d.date; }));
+  yScaleMV1.domain([0, d3.max(mean_values, function(d) { return d.value; }) * 1.1]);
+  yScaleMV2.domain([0, d3.max(mean_duration, function(d) { return d.value; }) * 1.005]);
+
+  color4.domain(mv_keys);
+
+  // Define the left line
+  var valueline4_1 = d3.line()
+      .x(function(d) { return xScaleMV(d.date); })
+      .y(function(d) { return yScaleMV1(d.value); })
+      .curve(d3.curveCardinal);
+
+  // Define the right line
+  var valueline4_2 = d3.line()
+      .x(function(d) { return xScaleMV(d.date); })
+      .y(function(d) { return yScaleMV2(d.value); })
+      .curve(d3.curveCardinal);
+
+  g4.selectAll(".line-mv")
+    .remove() // reload
+    .exit()
+    .data(mvNest)
+    .enter()
+    .append("path")
+        .attr("class", "line-mv")
+        .attr("linekey", d => d.key)
+        .attr("d", function(d){ return valueline4_1(d.values)})
+        .style("stroke", function(d,i) { return color4(d.key); })
+        .style("stroke-width", 2)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)")
+        .on("mouseover", function(d) {
+
+        })
+        .on("mouseout", function(d) {
+
+
+        });
+  
+  // add line
+  d3.selectAll(".line-duration").remove();
+
+  g4.append("path")
+      .datum(mean_duration)
+      .attr("class", "line-duration")
+      .attr("d", valueline4_2)
+      ;
+
+  d3.selectAll(".axis-mv-x").remove();
+  d3.selectAll(".axis-mv-y1").remove();
+  d3.selectAll(".axis-mv-y2").remove();
+
+  d3.selectAll(".grid-mv-y1").remove();
+
+  d3.selectAll(".rect_mv_legend").remove();
+  d3.selectAll(".text_mv_legend").remove();
+
+  d3.selectAll(".mouse-over-effects-mv").remove();
+  
+  // d3.selectAll(".grid-mv-y2").remove();
+
+  g4.append("g")
+  .attr("class", "axis axis-mv-x")
+  .attr("transform", "translate(0," + height4 + ")")
+  .call(xAxisMV);
+
+  // left y axis
+  g4.append("g")
+      .attr("class", "axis axis-mv-y1")
+      .call(yAxisMV1)
+      .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -55)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Sum");
+
+  // right y axis
+  g4.append("g")
+      .attr("class", "axis axis-mv-y2")
+      .attr("transform", "translate( " + width4 + ", 0 )")
+      .call(yAxisMV2)
+      .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 45)
+          .attr("dy", ".9em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "red")
+          .text("Days"); // y axis label
+
+  // add the Y gridlines
+  g4.append("g")     
+      .attr("class", "grid-mv-y1")
+      .call(d3.axisLeft(yScaleMV1)
+          .tickSize(-width4)
+          .tickFormat("")
+      )
+
+  // legend
+  var legend_mv = g4.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .selectAll("g")
+      .remove() // reload
+      .exit()
+      .data(mvNest, d => d.key)
+      .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+  legend_mv.append("rect")
+      .attr("x", 3)
+      .attr("y", height4 + 30)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", function(d) { return color4(d.key); })
+      .attr("class", 'rect_mv_legend')
+      .attr("id", (d, i) => "rect_mv_legend_" + d.key)
+    
+      .on("mouseover", function(d, i) {       
+        })
+
+      .on("mouseout", function(d, i) {      
+
+      });
+
+  legend_mv.append("text")
+      .attr("x", 30)
+      .attr("y", height4 + 30 + 9.5)
+      .attr("class", 'text_mv_legend')
+      .attr("dy", "0.32em")
+      .text(function(d) { return d.key; });
+
+  // ------- Mouse tooltip -------
+
+  var mouseG4 = g4.append("g")
+      .attr("class", "mouse-over-effects-mv");
+
+  mouseG4.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-mv-line")
+      .style("stroke", "grey")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  var lines4 = document.getElementsByClassName('line-mv');
+  var lines4_dur = document.getElementsByClassName('line-duration');
+
+  var mousePerLine4 = mouseG4.selectAll('.mouse-per-mv-line')
+      .data(mvNest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-mv-line");
+
+  mousePerLine4.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color4(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine4.append("text")
+      .attr("transform", "translate(10,3)");
+
+  // -------------
+
+  var durNest = d3.nest()
+    .key(function(d){
+      return d.label;
+    })
+    .entries(mean_duration);
+
+  var mousePerLine4_dur = mouseG4.selectAll('.mouse-per-dur-line')
+      .data(durNest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-dur-line");
+
+  mousePerLine4_dur.append("circle")
+      .attr("r", 7)
+      .style("stroke", 'red')
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine4_dur.append("text")
+      .attr("transform", "translate(10,3)");
+
+  // --------
+
+  mouseG4.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width4) // can't catch mouse events on a g element
+      .attr('height', height4)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-mv-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-mv-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-mv-line text")
+          .style("opacity", "0");
+
+        d3.selectAll(".mouse-per-dur-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-dur-line text")
+          .style("opacity", "0");
+       
+      })
+      .on('mouseover', function() { // on mouse in show line, circles and text
+        d3.select(".mouse-mv-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-mv-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-mv-line text")
+          .style("opacity", "1");
+
+        d3.selectAll(".mouse-per-dur-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-dur-line text")
+          .style("opacity", "1");
+      })
+      .on('mousemove', function() { // mouse moving over canvas
+        var mouse = d3.mouse(this);
+        d3.select(".mouse-mv-line")
+          .attr("d", function() {
+            var d = "M" + mouse[0] + "," + height4;
+            d += " " + mouse[0] + "," + 0;
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-mv-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleMV.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines4[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines4[i].getPointAtLength(beginning);
+            var line_coord_end = lines4[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines4[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleMV1.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+
+          // duration tooltip
+
+          d3.selectAll(".mouse-per-dur-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleMV.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines4_dur[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines4_dur[i].getPointAtLength(beginning);
+            var line_coord_end = lines4_dur[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines4_dur[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleMV2.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+    });
+
+} //end update
+
+// create the svg 4
+var svg4 = d3.select("#chart4");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width4 = +svg4.attr("width") - margin.left - margin.right;
+var height4 = +svg4.attr("height") - margin.top - margin.bottom;
+
+var g4 = svg4.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart4");
+
+var xScaleMV = d3.scaleTime().range([0, width4]);
+var yScaleMV1 = d3.scaleLinear().range([height4, 0]);
+var yScaleMV2 = d3.scaleLinear().range([height4, 0]);
+
+var color4 = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisMV = d3.axisBottom(xScaleMV).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisMV1 =  d3.axisLeft(yScaleMV1);
+var yAxisMV2 =  d3.axisRight(yScaleMV2);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart4-header").text('Средние показатели по продукту');
+
+// legend for right chart
+g4.append("line")
+    .attr("x1", width4 - 35)
+    .attr("x2", width4)
+    .attr("y1", height4 + 35)
+    .attr("y2", height4 + 35)
+    .style("stroke-dasharray","5,5")
+    .style("stroke-width", 4)
+    .style("stroke", 'red');
+
+g4.append("text")
+    .attr("x", width4 - 44)
+    .attr("y", height4 + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Duration");
+
+
+// generate initial graph using first series name
+draw_mv(filter_json(json_mean_values, 'product', "{{ products_for_mean_values.0 }}"));
+
+//------------------------  CHART 5 [Net revenue] ------------------------
+
+// create the svg 5
+
+function draw_net_revenue(data, flag) {
+
+  var cl_net_revenue = d3.values(data)
+      .filter(function(d) { return d.segment == "CL"; });
+
+  var pd_net_revenue = d3.values(data)
+      .filter(function(d) { return d.segment == "PD"; });
+
+var nrclNest = d3.nest()
+    .key(function(d){
+      return d.label;
+    })
+    .entries(cl_net_revenue);
+
+
+var nr_keys = d3.values(nrclNest)
+    .map(function(d) { return d.key; });
+
+
+var nrpdNest = d3.nest()
+    .key(function(d){
+      return d.label;
+    })
+    .entries(pd_net_revenue);;
+
+
+xScaleNR.domain(d3.extent(cl_net_revenue, function(d) { return d.date; }));
+yScaleNR1.domain([d3.min(cl_net_revenue, function(d) { return d.value; }) * 1.1, d3.max(cl_net_revenue, function(d) { return d.value; }) * 1.1]);
+yScaleNR2.domain([d3.min(pd_net_revenue, function(d) { return d.value; }) * 1.1, d3.max(pd_net_revenue, function(d) { return d.value; }) * 1.2]);
+
+// color5.domain(nr_keys);
+
+// Define the left line
+var valueline5_cl = d3.line()
+    .x(function(d) { return xScaleNR(d.date); })
+    .y(function(d) { return yScaleNR1(d.value); })
+    .curve(d3.curveCardinal)
+    ;
+
+// Define the right line
+var valueline5_pd = d3.line()
+    .x(function(d) { return xScaleNR(d.date); })
+    .y(function(d) { return yScaleNR2(d.value); })
+    .curve(d3.curveCardinal)
+    ;
+
+// draw left lines
+g5.selectAll(".line-nr-cl")
+  .remove() // reload
+  .exit()
+  .data(nrclNest)
+  .enter()
+  .append("path")
+      .attr("class", "line-nr-cl")
+      .attr("linekey", d => d.key)
+      .attr("d", function(d){ return valueline5_cl(d.values)})
+      .style("stroke", function(d,i) { return color5(d.key); })
+      .style("stroke-width", 2)
+      .attr("id", d => 'tag'+d.key)
+      .attr("clip-path", "url(#clip)")
+
+// draw right lines
+g5.selectAll(".line-nr-pd")
+  .remove() // reload
+  .exit()
+  .data(nrpdNest)
+  .enter()
+  .append("path")
+      .attr("class", "line-nr-pd")
+      .attr("linekey", d => d.key)
+      .attr("d", function(d){ return valueline5_pd(d.values)})
+      .style("stroke", function(d,i) { return color5(d.key); })
+      .style("stroke-width", 2)
+      .attr("id", d => 'tag'+d.key)
+      .attr("clip-path", "url(#clip)")
+
+
+d3.selectAll(".axis-nr-x").remove();
+d3.selectAll(".axis-nr-y1").remove();
+d3.selectAll(".axis-nr-y2").remove();
+
+d3.selectAll(".text_nrcl_legend").remove();
+d3.selectAll(".text_nrpd_legend").remove();
+
+d3.selectAll(".rect_nr_legend").remove();
+d3.selectAll(".text_means_legend").remove();
+
+d3.selectAll(".mouse-over-effects-nr").remove();
+
+// axis x
+g5.append("g")
+  .attr("class", "axis axis-nr-x")
+  .attr("transform", "translate(0," + height5 + ")")
+  .call(xAxisNR);
+
+// left y axis
+g5.append("g")
+    .attr("class", "axis axis-nr-y1")
+    .call(yAxisNR1)
+    .append("text")
+      .attr("class", "axis-title")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -80)
+      .attr("dy", ".9em")
+      .style("text-anchor", "end") // label align
+      .attr("fill", "#5D6971")
+      .text("Sum CL");
+
+// right y axis
+g5.append("g")
+    .attr("class", "axis axis-nr-y2")
+    .attr("transform", "translate( " + width5 + ", 0 )")
+    .call(yAxisNR2)
+    .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 65)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Sum PD"); // y axis label
+
+// add the Y gridlines
+g5.append("g")     
+    .attr("class", "grid-nr-y")
+    .call(d3.axisLeft(yScaleNR1)
+        .tickSize(-width5)
+        .tickFormat("")
+    )
+
+// left legend
+var legend_nr_cl = g5.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .remove() // reload
+    .exit()
+    .data(nrclNest, d => d.key)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+legend_nr_cl.append("rect")
+    .attr("x", 3)
+    .attr("y", height5 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", function(d) { return color5(d.key); })
+    .attr("class", 'rect_nrcl_legend')
+    .attr("id", (d, i) => "rect_nr_legend_" + d.key)
+
+
+legend_nr_cl.append("text")
+    .attr("x", 30)
+    .attr("y", height5 + 30 + 9.5)
+    .attr("class", 'text_nrcl_legend')
+    .attr("dy", "0.32em")
+    .text(function(d) { return d.key; });
+
+// right legend
+var legend_nr_pd = g5.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .remove() // reload
+    .exit()
+    .data(nrpdNest, d => d.key)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+legend_nr_pd.append("rect")
+    .attr("x", width5 + 3 - 50)
+    .attr("y", height5 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", function(d) { return color5(d.key); })
+    .attr("class", 'rect_nrpd_legend')
+    .attr("id", (d, i) => "rect_nr_legend_" + d.key)
+
+
+legend_nr_pd.append("text")
+    .attr("x", width5 + 30 - 50)
+    .attr("y", height5 + 30 + 9.5)
+    .attr("class", 'text_nrpd_legend')
+    .attr("dy", "0.32em")
+    .text(function(d) { return d.key; });
+
+
+// ------- Mouse tooltip -------
+
+  var mouseG5 = g5.append("g")
+      .attr("class", "mouse-over-effects-nr");
+
+  mouseG5.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-nr-line")
+      .style("stroke", "grey")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  var lines5_cl = document.getElementsByClassName('line-nr-cl');
+  var lines5_pd = document.getElementsByClassName('line-nr-pd');
+
+  var mousePerLine5_cl = mouseG5.selectAll('.mouse-per-nrcl-line')
+      .data(nrclNest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-nrcl-line");
+
+  mousePerLine5_cl.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color5(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine5_cl.append("text")
+      .attr("transform", "translate(10,3)");
+
+  var mousePerLine5_pd = mouseG5.selectAll('.mouse-per-nrpd-line')
+    .data(nrpdNest)
+    .enter()
+    .append("g")
+    .attr("class", "mouse-per-nrpd-line");
+
+
+  mousePerLine5_pd.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color5(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine5_pd.append("text")
+      .attr("transform", "translate(10,3)");
+
+
+  mouseG5.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width5) // can't catch mouse events on a g element
+      .attr('height', height5)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-nr-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-nrcl-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-nrcl-line text")
+          .style("opacity", "0");
+
+        d3.selectAll(".mouse-per-nrpd-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-nrpd-line text")
+          .style("opacity", "0");
+      })
+      .on('mouseover', function() { // on mouse in show line, circles and text
+        d3.select(".mouse-nr-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-nrcl-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-nrcl-line text")
+          .style("opacity", "1");
+
+        d3.selectAll(".mouse-per-nrpd-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-nrpd-line text")
+          .style("opacity", "1");
+      })
+      .on('mousemove', function() { // mouse moving over canvas
+        var mouse = d3.mouse(this);
+        d3.select(".mouse-nr-line")
+          .attr("d", function() {
+            var d = "M" + mouse[0] + "," + height5;
+            d += " " + mouse[0] + "," + 0;
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-nrcl-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleNR.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines5_cl[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines5_cl[i].getPointAtLength(beginning);
+            var line_coord_end = lines5_cl[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines5_cl[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleNR1.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+
+          d3.selectAll(".mouse-per-nrpd-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleNR.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines5_pd[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines5_pd[i].getPointAtLength(beginning);
+            var line_coord_end = lines5_pd[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines5_pd[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleNR2.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+      });
+
+  // filtering
+  if (flag == 'cl') {
+    // delete right pd
+    d3.selectAll(".axis-nr-y2").remove();
+    d3.selectAll(".line-nr-pd").remove();
+    d3.selectAll(".mouse-per-nrpd-line").remove();
+    d3.selectAll(".rect_nrpd_legend").remove();
+    d3.selectAll(".text_nrpd_legend").remove();
+  }
+
+  if (flag == 'pd') {
+    // delete left cl
+    d3.selectAll(".axis-nr-y1").remove();
+    d3.selectAll(".line-nr-cl").remove();
+    d3.selectAll(".mouse-per-nrcl-line").remove();
+    d3.selectAll(".rect_nrcl_legend").remove();
+    d3.selectAll(".text_nrcl_legend").remove();
+  }
+
+
+}
+
+var svg5 = d3.select("#chart5");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width5 = +svg5.attr("width") - margin.left - margin.right;
+var height5 = +svg5.attr("height") - margin.top - margin.bottom;
+
+var g5 = svg5.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart5");
+
+var xScaleNR = d3.scaleTime().range([0, width5]);
+var yScaleNR1 = d3.scaleLinear().range([height5, 0]);
+var yScaleNR2 = d3.scaleLinear().range([height5, 0]);
+
+var color5 = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisNR = d3.axisBottom(xScaleNR).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisNR1 =  d3.axisLeft(yScaleNR1);
+var yAxisNR2 =  d3.axisRight(yScaleNR2);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart5-header").text('Net revenue');
+
+draw_net_revenue(json_net_revenue, "all");
+
+//------------------------  CHART 6 [Средние la, lc, duration по всем продуктам] ------------------------
+
+function draw_means(data) {
+
+  var means_values = data;
+
+  var means_Nest = d3.nest()
+    .key(function(d){
+      return d.product;
+    })
+    .entries(means_values);
+
+  var means_keys = d3.values(means_Nest)
+    .map(function(d) { return d.key; });
+
+  // console.log('riNest in function\n', riNest);
+
+  xScaleMeans.domain(d3.extent(means_values, function(d) { return d.date; }));
+  yScaleMeans.domain([0, d3.max(means_values, function(d) { return d.value; }) * 1.1]);
+  color6.domain(means_keys);
+
+  // Define the left line
+  var valueline6 = d3.line()
+      .x(function(d) { return xScaleMeans(d.date); })
+      .y(function(d) { return yScaleMeans(d.value); })
+      .curve(d3.curveCardinal);
+
+  g6.selectAll(".line-means")
+    .remove() // reload
+    .exit()
+    .data(means_Nest)
+    .enter()
+    .append("path")
+        .attr("class", "line-means")
+        .attr("linekey", d => d.key)
+        .attr("d", function(d){ return valueline6(d.values)})
+        .style("stroke", function(d,i) { return color6(d.key); })
+        .style("stroke-width", 2)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)")
+        .on("mouseover", function(d) {
+
+        })
+        .on("mouseout", function(d) {
+
+
+        });
+  
+
+
+  d3.selectAll(".axis-means-x").remove();
+  d3.selectAll(".axis-means-y").remove();
+
+  d3.selectAll(".grid-means-y").remove();
+
+  d3.selectAll(".rect_means_legend").remove();
+  d3.selectAll(".text_means_legend").remove();
+
+  d3.selectAll(".mouse-over-effects-means").remove();
+  
+  // d3.selectAll(".grid-mv-y2").remove();
+
+  g6.append("g")
+  .attr("class", "axis axis-means-x")
+  .attr("transform", "translate(0," + height6 + ")")
+  .call(xAxisMeans);
+
+  // left y axis
+  g6.append("g")
+      .attr("class", "axis axis-means-y")
+      .call(yAxisMeans)
+      .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -55)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Sum, %");
+
+  // add the Y gridlines
+  g6.append("g")     
+      .attr("class", "grid-means-y")
+      .call(d3.axisLeft(yScaleMeans)
+          .tickSize(-width6)
+          .tickFormat("")
+      )
+
+  // legend
+  var legend_means = g6.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .selectAll("g")
+      .remove() // reload
+      .exit()
+      .data(means_Nest, d => d.key)
+      .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+  legend_means.append("rect")
+      .attr("x", 3)
+      .attr("y", height6 + 30)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", function(d) { return color6(d.key); })
+      .attr("class", 'rect_means_legend')
+      .attr("id", (d, i) => "rect_means_legend_" + d.key)
+    
+      .on("mouseover", function(d, i) {       
+        })
+
+      .on("mouseout", function(d, i) {      
+
+      });
+
+  legend_means.append("text")
+      .attr("x", 30)
+      .attr("y", height6 + 30 + 9.5)
+      .attr("class", 'text_means_legend')
+      .attr("dy", "0.32em")
+      .text(function(d) { return d.key; });
+
+  // ------- Mouse tooltip -------
+
+  var mouseG6 = g6.append("g")
+      .attr("class", "mouse-over-effects-means");
+
+  mouseG6.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-means-line")
+      .style("stroke", "grey")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  var lines6 = document.getElementsByClassName('line-means');
+
+  var mousePerLine6 = mouseG6.selectAll('.mouse-per-means-line')
+      .data(means_Nest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-means-line");
+
+  mousePerLine6.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color6(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine6.append("text")
+      .attr("transform", "translate(10,3)");
+
+  mouseG6.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width6) // can't catch mouse events on a g element
+      .attr('height', height6)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-means-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-means-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-means-line text")
+          .style("opacity", "0");
+      })
+      .on('mouseover', function() { // on mouse in show line, circles and text
+        d3.select(".mouse-means-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-means-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-means-line text")
+          .style("opacity", "1");
+
+      })
+      .on('mousemove', function() { // mouse moving over canvas
+        var mouse = d3.mouse(this);
+        d3.select(".mouse-means-line")
+          .attr("d", function() {
+            var d = "M" + mouse[0] + "," + height6;
+            d += " " + mouse[0] + "," + 0;
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-means-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleMeans.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines6[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines6[i].getPointAtLength(beginning);
+            var line_coord_end = lines6[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines6[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleMeans.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+
+    });
+
+} //end update
+
+// create the svg
+var svg6 = d3.select("#chart6");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width6 = +svg6.attr("width") - margin.left - margin.right;
+var height6 = +svg6.attr("height") - margin.top - margin.bottom;
+
+var g6 = svg6.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart6");
+
+var xScaleMeans = d3.scaleTime().range([0, width6]);
+var yScaleMeans = d3.scaleLinear().range([height6, 0]);
+
+var color6 = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisMeans = d3.axisBottom(xScaleMeans).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisMeans =  d3.axisLeft(yScaleMeans);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart6-header").text('Средние показатели по продуктам');
+
+
+// generate initial graph using first series name
+draw_means(filter_json(json_means, 'variable', "{{ product_charact.0 }}"));
+
+
+// ------------------------  CHART 7 [Разница между LC_plan и LC_fact] ------------------
+
+function draw_lc_lc_diff(data) {
+
+  var lc_lc_diff_values = data;
+
+  var lc_lc_diff_Nest = d3.nest()
+    .key(function(d){
+      return d.label;
+    })
+    .entries(lc_lc_diff_values);
+
+  var lc_lc_diff_keys = d3.values(lc_lc_diff_Nest)
+    .map(function(d) { return d.key; });
+  // console.log(ri_keys);
+
+  // console.log('riNest in function\n', riNest);
+
+  xScaleLC.domain(d3.extent(lc_lc_diff_values, function(d) { return d.date; }));
+  yScaleLC.domain([0, d3.max(lc_lc_diff_values, function(d) { return d.value; }) * 1.1]);
+  color7.domain(lc_lc_diff_keys);
+
+  // Define the left line
+  var valueline71 = d3.line()
+      .x(function(d) { return xScaleLC(d.date); })
+      .y(function(d) { return yScaleLC(d.value); })
+      .curve(d3.curveCardinal);
+
+  g7.selectAll(".line-lc")
+    .remove() // reload
+    .exit()
+    .data(lc_lc_diff_Nest)
+    .enter()
+    .append("path")
+        .attr("class", "line-lc")
+        .attr("linekey", d => d.key)
+        .attr("d", function(d){ return valueline71(d.values)})
+        .style("stroke", function(d,i) { return color7(d.key); })
+        .style("stroke-width", 2)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)")
+        .on("mouseover", function(d) {
+
+        })
+        .on("mouseout", function(d) {
+
+
+        });
+  
+
+
+  d3.selectAll(".axis-lc-x").remove();
+  d3.selectAll(".axis-lc-y").remove();
+
+  d3.selectAll(".grid-lc-y").remove();
+
+  d3.selectAll(".rect_lc_legend").remove();
+  d3.selectAll(".text_lc_legend").remove();
+
+  d3.selectAll(".mouse-over-effects-lc").remove();
+  
+  // d3.selectAll(".grid-mv-y2").remove();
+
+  g7.append("g")
+  .attr("class", "axis axis-lc-x")
+  .attr("transform", "translate(0," + height7 + ")")
+  .call(xAxisLC);
+
+  // left y axis
+  g7.append("g")
+      .attr("class", "axis axis-lc-y")
+      .call(yAxisLC)
+      .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -55)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Sum, %");
+
+  // add the Y gridlines
+  g7.append("g")     
+      .attr("class", "grid-lc-y")
+      .call(d3.axisLeft(yScaleLC)
+          .tickSize(-width7)
+          .tickFormat("")
+      )
+
+  // legend
+  var legend_lc = g7.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .selectAll("g")
+      .remove() // reload
+      .exit()
+      .data(lc_lc_diff_Nest, d => d.key)
+      .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+  legend_lc.append("rect")
+      .attr("x", 3)
+      .attr("y", height7 + 30)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", function(d) { return color7(d.key); })
+      .attr("class", 'rect_lc_legend')
+      .attr("id", (d, i) => "rect_lc_legend_" + d.key)
+    
+      .on("mouseover", function(d, i) {       
+        })
+
+      .on("mouseout", function(d, i) {      
+
+      });
+
+  legend_lc.append("text")
+      .attr("x", 30)
+      .attr("y", height7 + 30 + 9.5)
+      .attr("class", 'text_lc_legend')
+      .attr("dy", "0.32em")
+      .text(function(d) { return d.key; });
+
+  // ------- Mouse tooltip -------
+
+  var mouseG7 = g7.append("g")
+      .attr("class", "mouse-over-effects-lc");
+
+  mouseG7.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-lc-line")
+      .style("stroke", "grey")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  var lines7 = document.getElementsByClassName('line-lc');
+
+  var mousePerLine7 = mouseG7.selectAll('.mouse-per-lc-line')
+      .data(lc_lc_diff_Nest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-lc-line");
+
+  mousePerLine7.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color7(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine7.append("text")
+      .attr("transform", "translate(10,3)");
+
+  // -------------
+
+  // --------
+
+  mouseG7.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width7) // can't catch mouse events on a g element
+      .attr('height', height7)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-lc-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-lc-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-lc-line text")
+          .style("opacity", "0");
+      })
+      .on('mouseover', function() { // on mouse in show line, circles and text
+        d3.select(".mouse-lc-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-lc-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-lc-line text")
+          .style("opacity", "1");
+
+      })
+      .on('mousemove', function() { // mouse moving over canvas
+        var mouse = d3.mouse(this);
+        d3.select(".mouse-lc-line")
+          .attr("d", function() {
+            var d = "M" + mouse[0] + "," + height7;
+            d += " " + mouse[0] + "," + 0;
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-lc-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleLC.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines7[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines7[i].getPointAtLength(beginning);
+            var line_coord_end = lines7[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines7[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleLC.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+
+    });
+
+} //end update
+
+// create the svg
+var svg7 = d3.select("#chart7");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width7 = +svg7.attr("width") - margin.left - margin.right;
+var height7 = +svg7.attr("height") - margin.top - margin.bottom;
+
+var g7 = svg7.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart7");
+
+var xScaleLC = d3.scaleTime().range([0, width7]);
+var yScaleLC = d3.scaleLinear().range([height7, 0]);
+
+var color7 = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisLC = d3.axisBottom(xScaleLC).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisLC =  d3.axisLeft(yScaleLC);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart7-header").text('Разница между LC_plan и LC_fact');
+
+
+// generate initial graph using first series name
+draw_lc_lc_diff(filter_json(json_lc_lc_diff, 'product', "{{ products_for_mean_values.0 }}"));
+
+//------------------------  CHART 8 [Объемы выдач (руб.)] -----------------------
+
+
+function draw_volume(data, data_sum) {
+
+  var stack_volume = d3.stack()
+    .keys(debt_keys)
+    .offset(d3.stackOffsetNone)
+    ;
+
+  var area = d3.area()
+    .x(function(d, i) { return xScaleVolume(d.data.date); })
+    .y0(function(d) { return yScaleVolume1(d[0]); })
+    // .y1(function(d) { return y1(d[1]); });
+    ;
+
+  // define line
+  var valueline_volume = d3.line()
+      .x(function(d) { return xScaleVolume(d.date); })
+      .y(function(d) { return yScaleVolume2(d.value); })
+      .curve(d3.curveCardinal);
+
+  xScaleVolume.domain(d3.extent(data, function(d) { return d.date; }));
+  yScaleVolume2.domain([0, d3.max(data_sum, function(d) { return d.value; }) * 1.1]);
+  
+  color8.domain(debt_keys);
+
+  var layer_volume = g8.selectAll(".volume_layer")
+    .remove() // reload
+    .exit()
+    .data(stack_volume(data));
+
+  layer_volume.enter().append("g")
+   
+    .append("path")
+    .attr("class", "volume_layer")
+    .attr("id", (d,i) => "area_volume_" + d.key)
+
+    .style("fill", function(d) { return color8(d.key); })
+    .attr("d", area)
+    // .attr("d", function(d) { return area(d.values); })
+    .on("mouseover", function() { 
+        tooltip_volume.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip_volume.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+
+        var xPosition = d3.mouse(this)[0] - 30;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        var x0 = xScaleVolume.invert(d3.mouse(this)[0]),
+        i = bisectDate(data, x0, 1),
+        d0 = data[i - 1],
+        d1 = data[i],
+        values = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        // console.log(values);
+
+        tooltip_volume.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip_volume.select("text")
+          .text(d.key + ': ' + formatFloat(100*values[d.key]) + '%')
+
+    });
+
+    // add line
+    d3.selectAll(".line-volume").remove();
+
+    g8.append("path")
+        .datum(data_sum)
+        .attr("class", "line-volume")
+        .attr("d", valueline_volume)
+        ;
+
+    d3.selectAll(".axis-volume-x").remove();
+    d3.selectAll(".axis-volume-y1").remove();
+    d3.selectAll(".axis-volume-y2").remove();
+
+
+    g8.append("g")
+    .attr("class", "axis axis-volume-x")
+    .attr("transform", "translate(0," + height8 + ")")
+    .call(xAxisVolume);
+
+    g8.append("g")
+        .attr("class", "axis axis-volume-y1")
+        .call(yAxisVolume1)
+        .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -50)
+          .attr("dy", ".9em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "#5D6971")
+          .text("Share");
+
+    // Add the Y2 Axis
+    g8.append("g")
+        .attr("class", "axis axis-volume-y2")
+        .attr("transform", "translate( " + width8 + ", 0 )")
+        .call(yAxisVolume2)
+        .append("text")
+            .attr("class", "axis-title")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 55)
+            .attr("dy", ".9em")
+            .style("text-anchor", "end") // label align
+            .attr("fill", "blue")
+            .text("Total volumes, rur"); // y axis label
+
+} //end update
+
+
+// create the svg
+var svg8 = d3.select("#chart8");
+var margin = {top: 50, right: 100, bottom: 330, left: 50};
+var width8 = +svg8.attr("width") - margin.left - margin.right;
+var height8 = +svg8.attr("height") - margin.top - margin.bottom;
+
+var g8 = svg8.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart8");
+
+var xScaleVolume = d3.scaleTime().range([0, width8]);
+var yScaleVolume1 = d3.scaleLinear().range([height8, 0]);
+var yScaleVolume2 = d3.scaleLinear().range([height8, 0]);
+
+var color8 = d3.scaleOrdinal(d3.schemeCategory20);
+// var color = d3.scaleOrdinal()
+//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var xAxisVolume = d3.axisBottom(xScaleVolume).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisVolume1 =  d3.axisLeft(yScaleVolume1).ticks(10, "%");
+var yAxisVolume2 =  d3.axisRight(yScaleVolume2).ticks(10).tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart8-header").text('Объемы выдач (руб.)');
+
+// legend
+var legend_volume = g8.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .data(debt_keys)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+        
+legend_volume.append("rect")
+    .attr("x", 3)
+    .attr("y", height8 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color8)
+    .attr("class", 'rect_debt_legend')
+    .attr("id", (d, i) => "rect_volume_legend_" + debt_keys[i])
+  
+    .on("mouseover", function(d, i){       
+        // area
+        cur_key = debt_keys[i]
+        // console.log(cur_key);
+
+        var hide_volume_list = debt_keys.slice(debt_keys.indexOf(cur_key) + 1, debt_keys.length);
+        
+        // svg.selectAll("path.debt_layer").style("opacity", 0.0);
+        // svg.selectAll('path#area_debt_' + cur_key).style("opacity", 1);
+
+        svg8.selectAll("path.volume_layer").style("fill", "#fff");
+        svg8.selectAll('path#area_volume_' + cur_key).style("fill", function(d) { return color8(debt_keys[i]); })
+
+        if (hide_volume_list.length > 0) {
+          for (var i = 0; i < hide_volume_list.length; i++) {
+            // svg.selectAll('path#area_debt_' + hide_debt_list[i]).style("opacity", 0.0);
+            svg8.selectAll('path#area_volume_' + hide_volume_list[i]).style("fill", "#fff");
+          }
+        }
+        
+        // rect
+        svg8.selectAll('.rect_volume_legend').style("opacity", 0.1);
+        d3.select(this).style("opacity", 1);
+      })
+
+      .on("mouseout", function(d, i){      
+        // area
+        // svg.selectAll("path.debt_layer").style("opacity", 1);
+        // console.log(debt_keys);
+        svg8.selectAll("path.volume_layer").style("fill", function(d, i) { return color8(d.key); })
+        // rect 
+        svg8.selectAll('rect.rect_volume_legend').style("opacity", 1);
+
+      });
+
+legend_volume.append("text")
+    .attr("x", 30)
+    .attr("y", height8 + 30 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for right chart
+g8.append("line")
+    .attr("x1", width8 - 35)
+    .attr("x2", width8)
+    .attr("y1", height8 + 35)
+    .attr("y2", height8 + 35)
+    .style("stroke-width", 4)
+    .style("stroke", 'blue');
+
+g8.append("text")
+    .attr("x", width8 - 44)
+    .attr("y", height8 + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Total volumes, rur");
+
+// tooltip bits, initial display is hidden
+var tooltip_volume = svg8.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip_volume.append("rect")
+    .attr("width", 170)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.6);
+
+tooltip_volume.append("text")
+    .attr("x", 85)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+draw_volume(filter_json(json_volumes_rub, 'variable', '{{ volume_fields.0 }}'), filter_json(json_volumes_rub_total, 'variable',  '{{ volume_fields.0 }}'));
+
+//------------------------  CHART 9 [Объемы выдач (шт.)] -----------------------
+
+var data = json_volumes_num;
+var data_sum = json_volumes_num_total;
+
+// create the svg
+var svg9 = d3.select("#chart9");
+var margin = {top: 30, right: 100, bottom: 330, left: 50};
+var width9 = +svg9.attr("width") - margin.left - margin.right;
+var height9 = +svg9.attr("height") - margin.top - margin.bottom;
+
+var g9 = svg9.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart9");
+
+var xScaleVolume_num = d3.scaleTime().range([0, width9]);
+var yScaleVolume1_num = d3.scaleLinear().range([height9, 0]);
+var yScaleVolume2_num = d3.scaleLinear().range([height9, 0]);
+
+var color9 = d3.scaleOrdinal(d3.schemeCategory20);
+// var color = d3.scaleOrdinal()
+//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var xAxisVolume_num = d3.axisBottom(xScaleVolume_num).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisVolume1_num =  d3.axisLeft(yScaleVolume1_num).ticks(10, "%");
+var yAxisVolume2_num =  d3.axisRight(yScaleVolume2_num).ticks(10);
+
+var stack_volume_num = d3.stack()
+  .keys(debt_keys)
+  .offset(d3.stackOffsetNone)
+  ;
+
+var area = d3.area()
+  .x(function(d, i) { return xScaleVolume_num(d.data.date); })
+  .y0(function(d) { return yScaleVolume1_num(d[0]); })
+    // .y1(function(d) { return y1(d[1]); });
+  ;
+
+  // define line
+var valueline_volume_num = d3.line()
+    .x(function(d) { return xScaleVolume_num(d.date); })
+    .y(function(d) { return yScaleVolume2_num(d.value); })
+    .curve(d3.curveCardinal);
+
+xScaleVolume_num.domain(d3.extent(data, function(d) { return d.date; }));
+yScaleVolume2_num.domain([0, d3.max(data_sum, function(d) { return d.value; }) * 1.1]);
+  
+color9.domain(debt_keys);
+
+var layer_volume_num = g9.selectAll(".volume_num_layer")
+  .remove() // reload
+  .exit()
+  .data(stack_volume_num(data));
+
+layer_volume_num.enter().append("g")
+   
+  .append("path")
+  .attr("class", "volume_num_layer")
+  .attr("id", (d,i) => "area_volume_num_" + d.key)
+
+  .style("fill", function(d) { return color9(d.key); })
+  .attr("d", area)
+    // .attr("d", function(d) { return area(d.values); })
+  .on("mouseover", function() { 
+      tooltip_volume_num.style("display", null); 
+  })
+  .on("mouseout", function() { 
+      tooltip_volume_num.style("display", "none");
+  })
+  .on("mousemove", function(d) {
+
+      var xPosition = d3.mouse(this)[0] - 30;
+      var yPosition = d3.mouse(this)[1] - 5;
+
+      var x0 = xScaleVolume_num.invert(d3.mouse(this)[0]),
+      i = bisectDate(data, x0, 1),
+      d0 = data[i - 1],
+      d1 = data[i],
+      values = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        // console.log(values);
+
+      tooltip_volume_num.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+      tooltip_volume_num.select("text")
+        .text(d.key + ': ' + formatFloat(100*values[d.key]) + '%')
+
+  });
+
+    // add line
+  d3.selectAll(".line-volume_num").remove();
+
+  g9.append("path")
+      .datum(data_sum)
+      .attr("class", "line-volume_num")
+      .attr("d", valueline_volume_num)
+      ;
+
+  d3.selectAll(".axis-volume_num-x").remove();
+  d3.selectAll(".axis-volume_num-y1").remove();
+  d3.selectAll(".axis-volume_num-y2").remove();
+
+
+  g9.append("g")
+  .attr("class", "axis axis-volume_num-x")
+  .attr("transform", "translate(0," + height9 + ")")
+  .call(xAxisVolume_num);
+
+  g9.append("g")
+      .attr("class", "axis axis-volume_num-y1")
+      .call(yAxisVolume1_num)
+      .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -50)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Share");
+  // Add the Y2 Axis
+  g9.append("g")
+      .attr("class", "axis axis-volume_num-y2")
+      .attr("transform", "translate( " + width9 + ", 0 )")
+      .call(yAxisVolume2_num)
+      .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 55)
+          .attr("dy", ".9em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "blue")
+          .text("Total volumes, num"); // y axis label
+
+ //end update
+
+
+// chart title
+d3.select(".chart9-header").text('Объемы выдач (шт.)');
+
+// legend
+var legend_volume_num = g9.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .data(debt_keys)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+        
+legend_volume_num.append("rect")
+    .attr("x", 3)
+    .attr("y", height9 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color9)
+    .attr("class", 'rect_volume_num_legend')
+    .attr("id", (d, i) => "rect_volume_num_legend_" + debt_keys[i])
+  
+    .on("mouseover", function(d, i){       
+        // area
+        cur_key = debt_keys[i]
+        // console.log(cur_key);
+
+        var hide_volume_num_list = debt_keys.slice(debt_keys.indexOf(cur_key) + 1, debt_keys.length);
+        
+        // svg.selectAll("path.debt_layer").style("opacity", 0.0);
+        // svg.selectAll('path#area_debt_' + cur_key).style("opacity", 1);
+
+        svg9.selectAll("path.volume_num_layer").style("fill", "#fff");
+        svg9.selectAll('path#area_volume_num_' + cur_key).style("fill", function(d) { return color9(debt_keys[i]); })
+
+        if (hide_volume_num_list.length > 0) {
+          for (var i = 0; i < hide_volume_num_list.length; i++) {
+            // svg.selectAll('path#area_debt_' + hide_debt_list[i]).style("opacity", 0.0);
+            svg9.selectAll('path#area_volume_num_' + hide_volume_num_list[i]).style("fill", "#fff");
+          }
+        }
+
+        // svg.selectAll("path:not(#area_debt_" + cur_key + ")").style("opacity", 0.1);; 
+        
+        // rect
+        svg9.selectAll('.rect_volume_num_legend').style("opacity", 0.1);
+        d3.select(this).style("opacity", 1);
+      })
+
+      .on("mouseout", function(d, i){      
+        // area
+        // svg.selectAll("path.debt_layer").style("opacity", 1);
+        // console.log(debt_keys);
+        svg9.selectAll("path.volume_num_layer").style("fill", function(d, i) { return color9(d.key); })
+        // rect 
+        svg9.selectAll('rect.rect_volume_num_legend').style("opacity", 1);
+
+      });
+
+legend_volume_num.append("text")
+    .attr("x", 30)
+    .attr("y", height9 + 30 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for right chart
+g9.append("line")
+    .attr("x1", width9 - 35)
+    .attr("x2", width9)
+    .attr("y1", height9 + 35)
+    .attr("y2", height9 + 35)
+    .style("stroke-width", 4)
+    .style("stroke", 'blue');
+
+g9.append("text")
+    .attr("x", width9 - 44)
+    .attr("y", height9 + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Total volumes, num");
+
+// tooltip bits, initial display is hidden
+var tooltip_volume_num = svg9.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip_volume_num.append("rect")
+    .attr("width", 170)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.6);
+
+tooltip_volume_num.append("text")
+    .attr("x", 85)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+
+//------------------------  CHART 10 [Approval rate] ------------------------
+
+// create the svg 10
+var svg10 = d3.select("#chart10");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width10 = +svg10.attr("width") - margin.left - margin.right;
+var height10 = +svg10.attr("height") - margin.top - margin.bottom;
+
+var g10 = svg10.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart10");
+
+var xScaleApproval = d3.scaleTime().range([0, width10]);
+var yScaleApproval = d3.scaleLinear().range([height10, 0]);
+
+var color10 = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisApproval = d3.axisBottom(xScaleApproval).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisApproval =  d3.axisLeft(yScaleApproval);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart10-header").text('Approval rate');
+
+var approval_values = json_approval_rate;
+
+var approval_Nest = d3.nest()
+  .key(function(d){
+    return d.product;
+  })
+  .entries(approval_values);
+
+var approval_keys = d3.values(approval_Nest)
+  .map(function(d) { return d.key; });
+
+// console.log('riNest in function\n', riNest);
+
+xScaleApproval.domain(d3.extent(approval_values, function(d) { return d.date; }));
+yScaleApproval.domain([0, d3.max(approval_values, function(d) { return d.value; }) * 1.1]);
+color10.domain(approval_keys);
+
+// Define the left line
+var valueline10 = d3.line()
+    .x(function(d) { return xScaleApproval(d.date); })
+    .y(function(d) { return yScaleApproval(d.value); })
+    // .curve(d3.curveCardinal)
+    ;
+
+g10.selectAll(".line-approval")
+  .remove() // reload
+  .exit()
+  .data(approval_Nest)
+  .enter()
+  .append("path")
+      .attr("class", "line-approval")
+      .attr("linekey", d => d.key)
+      .attr("d", function(d){ return valueline10(d.values)})
+      .style("stroke", function(d,i) { return color10(d.key); })
+      .style("stroke-width", 2)
+      .attr("id", d => 'tag'+d.key)
+      .attr("clip-path", "url(#clip)")
+      .on("mouseover", function(d) {
+
+      })
+      .on("mouseout", function(d) {
+
+
+      });
+
+
+
+d3.selectAll(".axis-approval-x").remove();
+d3.selectAll(".axis-approval-y").remove();
+
+d3.selectAll(".grid-approval-y").remove();
+
+d3.selectAll(".rect_approval_legend").remove();
+d3.selectAll(".text_approval_legend").remove();
+
+d3.selectAll(".mouse-over-effects-approval").remove();
+
+// d3.selectAll(".grid-mv-y2").remove();
+
+g10.append("g")
+.attr("class", "axis axis-approval-x")
+.attr("transform", "translate(0," + height10 + ")")
+.call(xAxisApproval);
+
+// left y axis
+g10.append("g")
+    .attr("class", "axis axis-approval-y")
+    .call(yAxisApproval)
+    .append("text")
+      .attr("class", "axis-title")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -55)
+      .attr("dy", ".9em")
+      .style("text-anchor", "end") // label align
+      .attr("fill", "#5D6971")
+      .text("Sum, %");
+
+// add the Y gridlines
+g10.append("g")     
+    .attr("class", "grid-approval-y")
+    .call(d3.axisLeft(yScaleApproval)
+        .tickSize(-width10)
+        .tickFormat("")
+    )
+
+// legend
+var legend_approval = g10.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .remove() // reload
+    .exit()
+    .data(approval_Nest, d => d.key)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+legend_approval.append("rect")
+    .attr("x", 3)
+    .attr("y", height10 + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", function(d) { return color10(d.key); })
+    .attr("class", 'rect_approval_legend')
+    .attr("id", (d, i) => "rect_approval_legend_" + d.key)
+  
+    .on("mouseover", function(d, i) {       
+      })
+
+    .on("mouseout", function(d, i) {      
+
+    });
+
+legend_approval.append("text")
+    .attr("x", 30)
+    .attr("y", height10 + 30 + 9.5)
+    .attr("class", 'text_approval_legend')
+    .attr("dy", "0.32em")
+    .text(function(d) { return d.key; });
+
+// ------- Mouse tooltip -------
+
+var mouseG10 = g10.append("g")
+    .attr("class", "mouse-over-effects-approval");
+
+mouseG10.append("path") // this is the black vertical line to follow mouse
+    .attr("class", "mouse-approval-line")
+    .style("stroke", "grey")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+var lines10 = document.getElementsByClassName('line-approval');
+
+var mousePerLine10 = mouseG10.selectAll('.mouse-per-approval-line')
+    .data(approval_Nest)
+    .enter()
+    .append("g")
+    .attr("class", "mouse-per-approval-line");
+
+mousePerLine10.append("circle")
+    .attr("r", 7)
+    .style("stroke", function(d) { return color10(d.key); })
+    .style("fill", "none")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+mousePerLine10.append("text")
+    .attr("transform", "translate(10,3)");
+
+// -------------
+
+// --------
+
+mouseG10.append('svg:rect') // append a rect to catch mouse movements on canvas
+    .attr('width', width10) // can't catch mouse events on a g element
+    .attr('height', height10)
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .on('mouseout', function() { // on mouse out hide line, circles and text
+      d3.select(".mouse-approval-line")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-approval-line circle")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-approval-line text")
+        .style("opacity", "0");
+    })
+    .on('mouseover', function() { // on mouse in show line, circles and text
+      d3.select(".mouse-approval-line")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-approval-line circle")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-approval-line text")
+        .style("opacity", "1");
+
+    })
+    .on('mousemove', function() { // mouse moving over canvas
+      var mouse = d3.mouse(this);
+      d3.select(".mouse-approval-line")
+        .attr("d", function() {
+          var d = "M" + mouse[0] + "," + height10;
+          d += " " + mouse[0] + "," + 0;
+          return d;
+        });
+
+      d3.selectAll(".mouse-per-approval-line")
+        .attr("transform", function(d, i) {
+          // console.log(width/mouse[0])
+          var xDate = xScaleApproval.invert(mouse[0]),
+              bisect = d3.bisector(function(d) { return d.date; }).right;
+              idx = bisect(d.values, xDate);
+          
+          var beginning = 0,
+              end = lines10[i].getTotalLength(),
+              target = null;
+
+          var line_coord_begin = lines10[i].getPointAtLength(beginning);
+          var line_coord_end = lines10[i].getPointAtLength(end);
+
+          d3.select(this).select('circle')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+            d3.select(this).select('text')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+          while (true){
+            target = Math.floor((beginning + end) / 2);
+            pos = lines10[i].getPointAtLength(target);
+            if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                break;
+            }
+            if (pos.x > mouse[0])      end = target;
+            else if (pos.x < mouse[0]) beginning = target;
+            else break; //position found
+          }
+          
+          d3.select(this).select('text')
+            .text(yScaleApproval.invert(pos.y).toFixed(2));
+            
+          return "translate(" + mouse[0] + "," + pos.y +")";
+        });
+
+  });
+
+//------------------------  CHARTS 12-13 [Roll rate Core, Digital]------------------------
+
+function draw_roll_rate(data, g, num) {
+
+  var roll_rate_values = data;
+
+  // console.log(roll_rate_values);
+
+  var roll_rate_Nest = d3.nest()
+    .key(function(d){
+      return d.product;
+    })
+    .entries(roll_rate_values);
+
+  // var roll_rate_keys = d3.values(roll_rate_Nest)
+  //   .map(function(d) { return d.key; });
+
+  xScaleRoll_rate.domain(d3.extent(roll_rate_values, function(d) { return d.date; }));
+  yScaleRoll_rate.domain([0, d3.max(roll_rate_values, function(d) { return d.value; }) * 1.1]);
+  
+  color_roll_rate.domain(roll_rate_keys);
+
+  // Define the left line
+  var valueline = d3.line()
+      .x(function(d) { return xScaleRoll_rate(d.date); })
+      .y(function(d) { return yScaleRoll_rate(d.value); })
+      .curve(d3.curveCardinal);
+
+  g.selectAll(".line-roll_rate"+num)
+    .remove() // reload
+    .exit()
+    .data(roll_rate_Nest)
+    .enter()
+    .append("path")
+        .attr("class", "line-roll_rate"+num)
+        .attr("linekey", d => d.key)
+        .attr("d", function(d){ return valueline(d.values)})
+        .style("stroke", function(d,i) { return color_roll_rate(d.key); })
+        .style("stroke-width", 2)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)")
+        .on("mouseover", function(d) {
+
+        })
+        .on("mouseout", function(d) {
+
+
+        });
+  
+  d3.selectAll(".axis-roll_rate"+num+"-x").remove();
+  d3.selectAll(".axis-roll_rate"+num+"-y").remove();
+
+  d3.selectAll(".grid-roll_rate"+num+"-y").remove();
+
+  d3.selectAll(".rect_roll_rate"+num+"_legend").remove();
+  d3.selectAll(".text_roll_rate"+num+"_legend").remove();
+
+  d3.selectAll(".mouse-over-effects-roll_rate"+num).remove();
+  
+  // d3.selectAll(".grid-mv-y2").remove();
+  g.append("g")
+  .attr("class", "axis axis-roll_rate"+num+"-x")
+  .attr("transform", "translate(0," + height12 + ")")
+  .call(xAxisRoll_rate);
+
+  // left y axis
+  g.append("g")
+      .attr("class", "axis axis-roll_rate"+num+"-y")
+      .call(yAxisRoll_rate)
+      .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -55)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Sum, %");
+
+  // add the Y gridlines
+  g.append("g")     
+      .attr("class", "grid-roll_rate"+num+"-y")
+      .call(d3.axisLeft(yScaleRoll_rate)
+          .tickSize(-width12)
+          .tickFormat("")
+      )
+
+  // legend
+  var legend_roll_rate = g.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .selectAll("g")
+      .remove() // reload
+      .exit()
+      .data(roll_rate_keys)
+      .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 25 + ")"; });
+
+  legend_roll_rate.append("rect")
+      .attr("x", 3)
+      .attr("y", height12 + 30)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", color_roll_rate)
+      .attr("class", 'rect_roll_rate'+num+'_legend')
+      .attr("id", (d, i) => "rect_roll_rate"+num+"_legend_" + roll_rate_keys[i])
+    
+      .on("mouseover", function(d, i) {       
+        })
+
+      .on("mouseout", function(d, i) {      
+
+      });
+
+  legend_roll_rate.append("text")
+      .attr("x", 30)
+      .attr("y", height12 + 30 + 9.5)
+      .attr("class", 'text_roll_rate'+num+'_legend')
+      .attr("dy", "0.32em")
+      .text(function(d, i) { return roll_rate_keys[i]; });
+
+  // ------- Mouse tooltip -------
+
+  var mouseG = g.append("g")
+      .attr("class", "mouse-over-effects-roll_rate"+num);
+
+  mouseG.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-roll_rate"+num+"-line")
+      .style("stroke", "grey")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  var lines = document.getElementsByClassName('line-roll_rate'+num);
+
+  var mousePerLine = mouseG.selectAll('.mouse-per-roll_rate'+num+'-line')
+      .data(roll_rate_Nest)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-roll_rate"+num+"-line");
+
+  mousePerLine.append("circle")
+      .attr("r", 7)
+      .style("stroke", function(d) { return color_roll_rate(d.key); })
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+  mousePerLine.append("text")
+      .attr("transform", "translate(10,3)");
+
+  // -------------
+
+  // --------
+
+  mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width12) // can't catch mouse events on a g element
+      .attr('height', height12)
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-roll_rate"+num+"-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-roll_rate"+num+"-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-roll_rate"+num+"-line text")
+          .style("opacity", "0");
+      })
+      .on('mouseover', function() { // on mouse in show line, circles and text
+        d3.select(".mouse-roll_rate"+num+"-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-roll_rate"+num+"-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-roll_rate"+num+"-line text")
+          .style("opacity", "1");
+
+      })
+      .on('mousemove', function() { // mouse moving over canvas
+        var mouse = d3.mouse(this);
+        d3.select(".mouse-roll_rate"+num+"-line")
+          .attr("d", function() {
+            var d = "M" + mouse[0] + "," + height12;
+            d += " " + mouse[0] + "," + 0;
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-roll_rate"+num+"-line")
+          .attr("transform", function(d, i) {
+            // console.log(width/mouse[0])
+            var xDate = xScaleRoll_rate.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+            
+            var beginning = 0,
+                end = lines[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines[i].getPointAtLength(beginning);
+            var line_coord_end = lines[i].getPointAtLength(end);
+
+            d3.select(this).select('circle')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+              d3.select(this).select('text')
+                .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+            while (true){
+              target = Math.floor((beginning + end) / 2);
+              pos = lines[i].getPointAtLength(target);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+            
+            d3.select(this).select('text')
+              .text(yScaleRoll_rate.invert(pos.y).toFixed(2));
+              
+            return "translate(" + mouse[0] + "," + pos.y +")";
+          });
+
+    });
+
+      // console.log(num);
+
+} //end update
+
+// create the svg 12
+var svg12 = d3.select("#chart12");
+var margin = {top: 50, right: 150, bottom: 280, left: 100};
+var width12 = +svg12.attr("width") - margin.left - margin.right;
+var height12 = +svg12.attr("height") - margin.top - margin.bottom;
+
+var g12 = svg12.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart12");
+
+var xScaleRoll_rate = d3.scaleTime().range([0, width12]);
+var yScaleRoll_rate = d3.scaleLinear().range([height12, 0]);
+
+var color_roll_rate = d3.scaleOrdinal(d3.schemeCategory20);
+
+var xAxisRoll_rate = d3.axisBottom(xScaleRoll_rate).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxisRoll_rate =  d3.axisLeft(yScaleRoll_rate);
+// .tickFormat(formatBillion);
+
+// chart title
+d3.select(".chart12-header").text('Roll rate Core');
+
+
+// generate initial graph using first series name
+draw_roll_rate(filter_json(json_roll_rate_core, 'variable', "{{ roll_rate_variables.0 }}"),g12,"12");
+
+
+
+
+// create the svg 13
+var svg13 = d3.select("#chart13");
+
+var g13 = svg13.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart13");
+
+// var color13 = d3.scaleOrdinal(d3.schemeCategory20);
+
+// chart title
+d3.select(".chart13-header").text('Roll rate Digital');
+
+
+// generate initial graph using first series name
+draw_roll_rate(filter_json(json_roll_rate_digital, 'variable', "{{ roll_rate_variables.0 }}"),g13,"13");
+
+//------------------------  CHART 15 [Net income по составляющим] ------------------------
+
+function draw_net_income(data, data1) {
+  
+  d3.selectAll(".axis-ni--y").remove()
+  d3.selectAll(".axis-ni--y1").remove()
+  d3.selectAll(".axis-ni--x").remove()
+  d3.selectAll(".bar-ni").remove()
+  d3.selectAll(".rect-ni").remove()
+  d3.selectAll(".line-ni").remove()
+  d3.selectAll(".dot-ni-positive").remove()
+  d3.selectAll(".dot-ni-negative").remove()
+  d3.selectAll(".rect-ni_legend").remove()
+  d3.selectAll(".text-ni_legend").remove()
+  d3.selectAll(".rect-ni_net_legend").remove()
+  d3.selectAll(".text-ni_net_legend").remove()
+  
+  var data_bar = [];
+  data.forEach(function(val, idx, arr){
+    if((val['label'] != 'net_income')){
+      data_bar.push(val);
+    }
+  });
+  var data_line0= [];
+  data.forEach(function(val, idx, arr){
+    if((val['product'] == 'All_company')&&(val['label'] != 'net_income')){
+      data_line0.push(val);
+    }
+  });  
+  var data_line = [];
+  var flag = 0;
+  for(var i = 0; i< data_line0.length;i++) {
+    
+    for(var j = 0; j<data_bar.length;j++) {
+      if(data_line0[i]['date'].getTime() == data_bar[j]['date'].getTime()) {
+        flag = 1;
+      }
+    }
+    if(flag == 1) {
+      data_line.push(data_line0[i])
+      flag = 0;
+    }
+  }
+
+
+  var data_bar1 = [];
+  data1.forEach(function(val, idx, arr){
+    if((val['label'] == 'net_income')){
+      data_bar1.push(val);
+    }
+  });
+  var data_line01= [];
+  data1.forEach(function(val, idx, arr){
+    if((val['label'] == 'net_income')){
+      data_line01.push(val);
+    }
+  });  
+  var data_line1 = [];
+  var flag = 0;
+  for(var i = 0; i< data_line01.length;i++) {
+    
+    for(var j = 0; j<data_bar1.length;j++) {
+      if(data_line01[i]['date'].getTime() == data_bar1[j]['date'].getTime()) {
+        flag = 1;
+      }
+    }
+    if(flag == 1) {
+      data_line1.push(data_line01[i])
+      flag = 0;
+    }
+  }
+
+mmin = d3.min(data_line1, (function (d) {
+                return d.value;
+              }))
+mmax = d3.max(data_line1, (function (d) {
+                return d.value;
+              }))
+
+
+var series = d3.stack()
+    .keys(["revenues","delta_provisions", "costs"])
+    .offset(d3.stackOffsetDiverging)
+    (data_bar);
+
+var xScale15 = d3.scaleBand()
+    .domain(data_bar.map(function(d) { return d.date; }))
+    .rangeRound([margin15.left, width15 - margin15.right])
+    .padding(0.1);
+
+var yScale15 = d3.scaleLinear()
+    .domain([d3.min(series, stackMin), d3.max(series, stackMax)])
+    .rangeRound([height15 - margin15.bottom, margin15.top]);
+var y1Scale15 = d3.scaleLinear()
+              .rangeRound([height15 - margin15.bottom, 0 + margin15.top])
+              ;
+
+y1Scale15.domain([d3.min([0,mmin]) , d3.max([0,mmax])])
+var color15 = d3.scaleOrdinal()
+    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var dict_vars = {"revenues":   "Revenues",
+    "delta_provisions": "Provisions",
+    "costs": "Costs",
+    "net_income": "Net income"}; // create an empty array
+
+    
+svg15.append("g")
+  .selectAll("g")
+  .data(series)
+  .enter().append("g")
+    .attr("fill", function(d) { return color15(d.key); })
+  .selectAll("rect")
+  .data(function(d) { return d; })
+  .enter().append("rect")
+    .attr("class", "rect-ni")
+    .attr("width", xScale15.bandwidth)
+    .attr("x", function(d) { return xScale15(d.data.date); })
+    .attr("y", function(d) { return yScale15(d[1]); })
+    .attr("height", function(d) { return yScale15(d[0]) - yScale15(d[1]); })
+    .on("mouseover", function() { 
+        tooltip15.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip15.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+        var xPosition = d3.mouse(this)[0] - 40;
+        var yPosition = d3.mouse(this)[1] - 5;
+        var elements = document.querySelectorAll(':hover');
+        l = elements.length;
+        l = l-2; // element g has class name by risk group
+        element = elements[l].__data__
+
+        tooltip15.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+
+        tooltip15.select("text").text(dict_vars[element.key] + "\n" + d3.format(".2f")((d[1]-d[0])/1000000) + " млн ₽");
+
+    });
+
+  var valueline15 = d3.line()
+      .x(function(d) { return xScale15(d.date) + xScale15.bandwidth()/2; })
+      .y(function(d) { return yScale15(d.value); });
+  
+  svg15.append("g")
+      .attr("transform", "translate(0," + yScale15(0) + ")")
+      .call(d3.axisBottom(xScale15).tickFormat(d3.timeFormat("%Y-%m")))
+          .attr("class", "axis-ni--x")
+          .selectAll("text")
+          .style("text-anchor", "end")
+          .attr("fill", "#143B20")
+          .attr("dx", "-.8em")
+          .attr("dy", ".15em")
+          .attr("transform", "rotate(-45)");
+
+  svg15.append("g")
+      .attr("transform", "translate(" + margin15.left + ",0)")
+      .attr("class", "axis-ni--y")
+      .call(d3.axisLeft(yScale15).ticks(10).tickFormat(formatMillion));
+
+
+  svg15.append("path")
+      .datum(data_line1)
+      .attr("class", "line-ni")
+      .style("stroke", "#000000")
+      .attr("d", valueline15);
+  var linetooltip = d3.select("body").append("div")
+      .attr("class", "linetooltip")
+      .style("opacity", 0);
+
+  // add the dots with tooltips
+  svg15.selectAll("dot")
+       .data(data_line1)
+     .enter().append("circle")
+       .attr("class", function(d) { return "dot-ni-" + (d.value < 0 ? "negative" : "positive"); })
+       .attr("r", 4)
+       .attr("cx", function(d) { return xScale15(d.date) + xScale15.bandwidth()/2; })
+       .attr("cy", function(d) { return yScale15(d.value); })
+       .on("mouseover", function(d, i) {
+         
+         linetooltip.transition()
+           .duration(200)
+           .style("opacity", .9);
+ 
+           linetooltip.html(d3.timeFormat("%Y-%m")(d.date) + "<br/>Net income: " + d3.format(".2f")(d.value/1000000) + " млн ₽")
+             .style("left", (d3.event.pageX-50) + "px")
+             .style("top", (d3.event.pageY - 70) + "px")
+             .style("height", "55px")
+             .style("width", "100px");
+
+         })
+       .on("mouseout", function(d) {
+         linetooltip.transition()
+           .duration(500)
+           .style("opacity", 0);
+         });
+
+  var tooltip15 = svg15.append("g")
+      .attr("class", "ToolTip-ni")
+      .style("display", "none");
+    
+  tooltip15.append("rect")
+      .attr("x", -45)
+      .attr("y", -40)
+      .attr("width", 170)
+      .attr("height", 30)
+      .attr("fill", "white")
+      .style("opacity", 0.5);
+
+
+  tooltip15.append("text")
+      .attr("y", -40)
+      .attr("x", 40)
+      .attr("dy", "1.2em")
+      .style("text-anchor", "middle")
+      .attr("font-size", "16px")
+      .attr("font-weight", "bold");
+   
+  var legend15 = svg15.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .selectAll("g")
+      .remove() // reload
+      .exit()
+      .data(series, d => d.key)
+      .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 25 +  ")"; });
+
+  legend15.append("rect")
+      .attr("x", 3 + margin15.left)
+      .attr("y", height15 - 80)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", function(d) { return color15(d.key); })
+      .attr("class", 'rect-ni_legend')
+      .attr("id", (d, i) => "rect-ni_legend_" + d.key)
+
+  legend15.append("text")
+      .attr("x", 30 + margin15.left)
+      .attr("y", height15 -80 + 9.5)
+      .attr("class", 'text-ni_legend')
+      // .attr("font-weight", "bold")
+      .attr("dy", "0.32em")
+      .text(function(d) { return dict_vars[d.key]; });
+
+  var legend15_net = svg15.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "start")
+      .selectAll("g")
+      .remove() // reload
+      .exit()
+      .data(data_line1.slice(0,1), d => d.label)
+      .enter().append("g")
+          .attr("transform", function(d, i) { return "translate(0," + i * 25 +  ")"; });
+
+  legend15_net.append("rect")
+      .attr("x", 3 + width15 - margin15.left - margin15.right)
+      .attr("y", height15 - 80)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", "blue")
+      .attr("class", 'rect-ni_net_legend')
+      .attr("id", (d, i) => "rect-ni_net_legend_" + d.key)
+
+
+  legend15_net.append("text")
+      .attr("x", 30 + width15 - margin15.left - margin15.right)
+      .attr("y", height15 -80 + 9.5)
+      .attr("class", 'text-ni_net_legend')
+      // .attr("font-weight", "bold")
+      .attr("dy", "0.32em")
+      .text(function(d) { return d.label; });
+
+
+  d3.select(".chart15-header").text('Net income');
+
+  // d3.selection.prototype.moveToFront = function() {
+  //   return this.each(function(){
+  //     this.parentNode.appendChild(this);
+  //   });
+  // };
+
+  function stackMin(serie) {
+    return d3.min(serie, function(d) { return d[0]; });
+  }
+
+  function stackMax(serie) {
+    return d3.max(serie, function(d) { return d[1]; });
+  }
+
+
+}
+
+var svg15 = d3.select("#chart15"),
+    margin15 = {top: 100, right: 70, bottom: 120, left: 50},
+    width15 = +svg15.attr("width"),
+    height15 = +svg15.attr("height");
+
+var g15 = svg15.append("g")
+          .attr("transform", "translate(" + margin15.left + "," + margin15.top + ")");
+
+draw_net_income(filter_json(json_net_income2, 'product', "{{ products_for_income.0 }}"),filter_json(json_net_income, 'product', "{{ products_for_income.0 }}"));
+
+
+
+// -------------------- HELP FUNCTIONS ---------------------
+
+var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+
+
+// --------------------------------------------------------------------------------------------
+
+// //Circle Data Set
+// var circleData = [
+//   { "cx": 20, "cy": 120, "radius": 20, "color" : "green" },
+//   { "cx": 70, "cy": 170, "radius": 20, "color" : "purple" }];
+
+// //Create the SVG Viewport
+// var svg = d3.select("#chart4").append("svg")
+//                                      .attr("width",200)
+//                                      .attr("height",200);
+
+// //Add circles to the svgContainer
+// var circles = svg.selectAll("circle")
+//                            .data(circleData)
+//                            .enter()
+//                            .append("circle");
+
+// //Add the circle attributes
+// var circleAttributes = circles
+//                        .attr("cx", function (d) { return d.cx; })
+//                        .attr("cy", function (d) { return d.cy; })
+//                        .attr("r", function (d) { return d.radius; })
+//                        .style("fill", function (d) { return d.color; });
+
+
+</script>
+
+
+{% endblock %}

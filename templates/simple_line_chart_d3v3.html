@@ -1,0 +1,231 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+    <style>
+
+    /*body {
+      font: 10px sans-serif;
+    }*/
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+      display: none;
+    }
+
+    <!--.line {-->
+      <!--fill: none;-->
+      <!--stroke: steelblue;-->
+      <!--stroke-width: 1.5px;-->
+    <!--}-->
+
+     .line {
+        stroke: #2f5491;
+        stroke-width: 3px;
+        fill: none;
+      }
+
+     .g-hed {
+        text-align: left;
+        text-transform: uppercase;
+        font-weight: bold;
+        font-size:22px;
+        margin: 3px 0;
+      }
+
+       .overlay {
+        fill: none;
+        pointer-events: all;
+      }
+
+       .focus {
+        font-size: 14px;
+      }
+
+      .focus circle {
+        fill: #5e8dc9;
+        <!--fill: #ff0000;-->
+      }
+
+    </style>
+    <!-- <script src="http://d3js.org/d3.v3.js"></script> -->
+    <!-- <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script> -->
+    <script type="text/javascript" src="{% static 'js/d3.v3.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/d3.tip.v0.6.3.js' %}"></script>
+    
+
+
+
+    <form method="post" action="/one_scorecard_counts/">
+        {% csrf_token %}
+        Choose scorecard
+        <select name='scorecard'>
+        {% for scorecard in scorecard_options %}
+          {% if cur_scorecard == scorecard %}
+            <option selected value='{{ scorecard }}'>{{ scorecard }}</option>
+          {% else %}
+            <option value='{{ scorecard }}'>{{ scorecard }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+        
+        Choose date from
+        <select name='date_from'>
+        {% for date in dates %}
+          {% if cur_date_from == date %}
+            <option selected value='{{ date }}'>{{ date }}</option>
+          {% else %}
+            <option value='{{ date }}'>{{ date }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+
+        <a>Choose date to</a>
+        <select name='date_upto'>
+        {% for date in dates %}
+          {% if cur_date_upto == date %}
+            <option selected value='{{ date }}'>{{ date }}</option>
+          {% else %}
+            <option value='{{ date }}'>{{ date }}</option>
+          {% endif %}
+        {% endfor %}
+        </select>
+        <input type="submit" value="Submit">
+    </form>
+
+
+
+    <h5 class="g-hed"></h5>
+    <p class="g-intro"></p>
+  
+
+    <!--<script type="text/javascript" src="one_scorecard_counts.js"></script>-->
+
+    <script>
+
+    var margin = {top: 20, right: 80, bottom: 30, left: 50},
+        width = 1200 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var parseDate = d3.time.format("%Y-%m").parse; // for dates like "2014-01-01"
+    //var parseDate = d3.time.format("%Y-%m-%dT00:00:00Z").parse;  // for dates like "2014-01-01T00:00:00Z"
+
+    //Divides date for tooltip placement
+    var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+
+    var x = d3.time.scale()
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom")
+        <!--.tickPadding(8)-->
+        <!--.tickSize(height)-->
+        <!--.ticks(12)-->
+        <!--.tickFormat(d3.time.format("%m/%Y"))-->
+        ;
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        <!--.tickPadding(8)-->
+        <!--.tickSize(-width)-->
+        ;
+
+    var line = d3.svg.line()
+        .x(function(d) { return x(d.date); })
+        .y(function(d) { return y(d.count); });
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+      var data = JSON.parse('{{ json | escapejs }}');
+
+      data.forEach(function(d) {
+        d.date = parseDate(d.date);
+        d.count = +d.count;
+
+      });
+
+      console.log(data);
+
+      x.domain(d3.extent(data, function(d) { return d.date; }));
+      y.domain(d3.extent(data, function(d) { return d.count; }));
+
+
+      // -----------------------------------------------
+    //Tooltips
+    var focus = svg.append("g")
+      .attr("class", "focus")
+      .style("display", "none");
+
+    //Adds circle to focus point on line
+    focus.append("circle")
+      .attr("r", 5);
+
+    //Adds text to focus point on line
+    focus.append("text")
+      .attr("x", 9)
+      .attr("dy", ".35em");
+
+    //Creates larger area for tooltip
+      var overlay = svg.append("rect")
+          .attr("class", "overlay")
+          .attr("width", width)
+          .attr("height", height)
+          .on("mouseover", function() { focus.style("display", null); })
+          .on("mouseout", function() { focus.style("display", "none"); })
+          .on("mousemove", mousemove);
+
+    //Tooltip mouseovers
+      function mousemove() {
+        var x0 = x.invert(d3.mouse(this)[0]),
+            i = bisectDate(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        focus.attr("transform", "translate(" + x(d.date) + "," + y(d.count) + ")");
+        focus.select("text").text(d.count);
+      };
+
+
+    //------------------------------------------------
+
+
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Count");
+
+      svg.append("path")
+          .datum(data)
+          .attr("class", "line")
+          .attr("d", line);
+
+      //Appends chart headline
+      d3.select(".g-hed").text('{{ cur_scorecard }}');
+
+    //});
+    </script>
+
+{% endblock %}

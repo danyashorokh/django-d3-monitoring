@@ -1,0 +1,42 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+    <style type="text/css">
+        
+
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+        
+    </style>
+
+    <div id="bg">
+
+
+        <div class="wrap">
+
+            <!-- {{ scorecards }}-->
+
+            <table class='table'>
+            <tr>
+            {% for sc in th %}
+            <th>{{ sc }}</th>
+            {% endfor %}
+            </tr>
+
+            {% for sc in scorecards %}
+            <tr>
+            <td>{{ sc.0 }}</td><td>{{ sc.1 }}</td><td>{{ sc.2 }}</td><td>{{ sc.3 }}</td><td>{{ sc.4 }}</td>
+            </tr>
+            {% endfor %}
+
+            </table>
+        </div>
+
+    </div>
+
+{% endblock %}

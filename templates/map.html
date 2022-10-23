@@ -1,0 +1,163 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+<style>
+    
+  body {
+    background: #fff;
+  }
+
+  .point {
+    fill:red
+  }
+
+  .text {
+    font-size:70%;
+  }
+
+  .stroke {
+    fill: none;
+    stroke: #000;
+    stroke-width: 3px;
+  }
+
+  .fill {
+    fill: #fff;
+  }
+
+  .graticule {
+    fill: none;
+    stroke: #777;
+    stroke-width: .5px;
+    stroke-opacity: .5;
+  }
+
+  .land {
+    fill: #bbb;
+  }
+
+  .boundary {
+    fill: none;
+    stroke: #fff;
+    stroke-width: .5px;
+  }
+
+</style>
+
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/topojson.v2.min.js"></script> -->
+
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/queue.v1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'map/topojson.v2.min.js' %}"></script>
+<!-- <script type="text/javascript" src="http://d3js.org/topojson.v0.min.js"></script> -->
+
+<script>
+
+var cities = [
+  {'city': 'Москва', 'lat': 55.7522200, 'lon': 37.6155600},
+  {'city': 'Санкт-Петербург', 'lat': 59.8944400, 'lon': 30.2641700},
+  {'city': 'Нижний Новгород', 'lat': 56.3286700, 'lon': 44.0020500},
+
+];
+
+var width = 1860,
+    height = 800;
+
+var projection = d3.geoMercator()
+      .scale(width / 3.7)
+      .translate([width / 2, height / 2])
+      .rotate([-20, 0])
+      .center([ 70, 60 ])
+      ;  // x y from 0,0
+
+// var projection = d3.geoMercator()
+//     .scale(700)
+//     .translate([width / 2, height / 2])
+//     .rotate([-105, 0])
+//     .center([-10, 65])
+//     // .parallels([52, 64])
+//     ;
+
+var path = d3.geoPath().projection(projection);
+
+var graticule = d3.geoGraticule();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.append("defs").append("path")
+    .datum({type: "Sphere"})
+    .attr("id", "sphere")
+    .attr("d", path);
+
+svg.append("use")
+    .attr("class", "stroke")
+    .attr("xlink:href", "#sphere");
+
+svg.append("use")
+    .attr("class", "fill")
+    .attr("xlink:href", "#sphere");
+
+svg.append("path")
+    .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
+
+// draw boundaries
+d3.json("{% static 'map/world-50m.json' %}", function(error, world) { // russia_1e-7sr.json world-50m.json
+  if (error) throw error;
+
+  svg.insert("path", ".graticule")
+      .datum(topojson.feature(world, world.objects.land))
+      .attr("class", "land")
+      .attr("d", path);
+
+  svg.insert("path", ".graticule")
+      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+      .attr("class", "boundary")
+      .attr("d", path);
+});
+  
+  
+//function to add points and labels to map
+function addpoint(lon,lat,text) {
+
+  var gpoint = svg.append("g").attr("class", "gpoint");
+  var x = projection([lon, lat])[0];
+  var y = projection([lon, lat])[1];
+
+  gpoint.append("svg:circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("class", "point")
+        .attr("r", 3);
+
+  //conditional in case a point has no associated text
+  if(text.length > 0){
+
+    gpoint.append("text")
+          .attr("x", x + 4)
+          .attr("y", y + 2)
+          .attr("class","text")
+          .text(text);
+  }
+
+}
+
+cities.forEach(function(d) {
+    addpoint(d.lon, d.lat, d.city )
+});
+  
+  
+//reference
+/*
+http://techslides.com/demos/d3/worldmap-template-d3v4.html
+https://stackoverflow.com/questions/14492284/center-a-map-in-d3-given-a-geojson-object
+https://bl.ocks.org/MariellaCC/0055298b94fcf2c16940
+*/
+  
+  
+</script>
+
+{% endblock %}

@@ -1,0 +1,508 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+<style>
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+.inner {
+    margin: auto;
+    /*margin-top: 30pt;*/
+    padding:10pt;
+    /*border:2px solid red;*/
+    border-radius:4pt;
+    width:80%;
+    height:450px;
+    display: block;
+    vertical-align: middle;
+}
+
+p {
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 40px;
+}
+
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+} 
+
+.axis--x path {
+  display: none;
+}
+
+.axis--y1 path {
+  display: none;
+}
+
+.axis--y2 path {
+  display: none;
+}
+
+/*g.chart3 > g.axis--y1 text{
+  fill: red;
+}
+*/
+.axis--y2 text{
+  fill: blue;
+}
+
+.line {
+  fill: none;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+path {
+  fill: none;
+}
+
+.overlay {
+      fill: none;
+      pointer-events: all;
+}
+
+.focus circle {
+  fill: #fff;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+div.linetooltip {
+  position: absolute;
+  text-align: center;
+/*  width: 100px;
+  height: 28px;*/
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 1px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.g-hed {
+        text-align: center;
+        text-transform: uppercase;
+        font-family: 'Snell';
+        font-weight: bold;
+        font-size:22px;
+        /*font-style: italic;*/
+        margin: 3px 0;
+        color: blue;
+}
+
+
+</style>
+
+
+
+
+<script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery.chained.min.js' %}"></script>
+
+<!-- charts -->
+<div class="outer">
+
+
+    <div class='radio'>
+
+            {% for debt in debt_fields %}
+            <label class='radio-inline'>
+              {% if forloop.counter == 1 %}
+                <input type="radio" name="gender" value="{{ debt }}" onclick="
+                draw_debt(filter_debt(data_share, 'variable', this.value), 
+                  filter_debt(data_sum, 'variable', this.value));
+                " checked> {{ debt }}
+              {% else %}
+              <input type="radio" name="gender" value="{{ debt }}" onclick="
+                draw_debt(filter_debt(data_share, 'variable', this.value), 
+                  filter_debt(data_sum, 'variable', this.value));
+                "> {{ debt }}
+              {% endif %}
+            </label>
+            {% endfor %}
+    </div>
+
+    <h3 class="g-hed"></h3>
+     <div class="inner">
+        <div id="seriesMenu"></div>
+        <svg id="chart1" width="1100" height="500"></svg>
+    </div>
+
+     <div class="inner">
+       <!--  <form>
+          <label><input type="radio" name="mode" value="bypercent" checked>Percent</label>
+          <label><input type="radio" name="mode" value="bycount">Number of Applications</label>
+        </form> -->
+        <svg id="chart2" width="960" height="500"></svg>
+    </div>
+
+    <div class="inner">
+        <svg id="chart3" width="960" height="500"></svg>
+    </div>
+
+    <div class="inner">
+        <svg id="chart4" width="960" height="500"></svg>
+    </div>
+
+    <div class="inner">
+        <svg id="chart5" width="960" height="500"></svg>
+    </div>
+</div>
+
+
+
+
+
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+
+<script>
+
+// date formatting
+var parseDate = d3.timeParse("%Y-%m");
+var formatFloat = d3.format(".3f");
+
+// get data
+var data_share = JSON.parse('{{ debt_amount_share | escapejs }}');
+var data_sum = JSON.parse('{{ debt_amount_sum | escapejs }}');
+var keys = JSON.parse('{{ keys | escapejs }}');
+
+//format the data
+data_share.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+    // d.sum = +d.sum;
+});
+
+data_sum.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+});
+
+console.log('keys\n', keys);
+console.log('data_share\n', data_share);
+console.log('data_sum\n', data_sum);
+
+
+function filter_debt(json, key, value) {
+
+  var result = [];
+  json.forEach(function(val, idx, arr){
+    if(val[key] == value){
+      result.push(val);
+    }
+  });
+  // console.log('filter by', value, '\n', result);
+  // draw_debt(result);
+  return result;
+}
+
+//------------------------  CHART 1  -----------------------
+
+
+function draw_debt(data, data_sum) {
+
+  
+  // var stack = d3.stack();
+
+  var stack = d3.stack()
+    // .keys(function(d) { return d.date; })
+    .keys(keys)
+    // .values(function(d) { return d.values; })
+    // .x(function(d) { return d.date; })
+    // .y(function(d) { return d.value; })
+    .offset(d3.stackOffsetNone)
+    ;
+
+
+  var nest = d3.nest()
+    .key(function(d) { return d.date; })
+    // .key(function(d) { return d.label; })
+    .entries(data);
+
+  console.log('nest\n', nest);
+  console.log('stack(nest)\n', stack(nest));
+
+  var area = d3.area()
+    .x(function(d, i) { return x(d.data.date); })
+    .y0(function(d) { return y1(d[0]); })
+    // .y1(function(d) { return y1(d[1]); });
+    ;
+
+  // define line
+  var valueline1 = d3.line()
+      .x(function(d) { return x(d.date); })
+      .y(function(d) { return y2(d.value); })
+      .curve(d3.curveCardinal);
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  y2.domain([d3.min(data_sum, function(d) { return d.value; }) / 1.005, d3.max(data_sum, function(d) { return d.value; }) * 1.005]);
+  
+  color.domain(keys);
+  // stack.keys(keys);
+
+  var layer = g1.selectAll(".layer")
+    .remove() // reload
+    .exit()
+    .data(stack(data));
+    // .data(stack(nest));
+
+  layer.enter().append("g")
+    .attr("class", "layer")
+    .append("path")
+    .attr("class", "area")
+    .style("fill", function(d) { return color(d.key); })
+    .attr("d", area)
+    // .attr("d", function(d) { return area(d.values); })
+    .on("mouseover", function() { 
+        tooltip1.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip1.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+      // console.log(d);
+        var xPosition = d3.mouse(this)[0] + 10;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        // var elements = document.querySelectorAll(':hover');
+        // l = elements.length;
+        // l = l-2; // element g has class name by risk group
+        // element = elements[l].__data__
+
+        tooltip1.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip1.select("text")
+          .text(d.key) // + ': ' + d.data);
+
+    });
+
+    // add line
+    d3.selectAll(".line").remove();
+
+    g1.append("path")
+        .datum(data_sum)
+        .attr("class", "line")
+        .attr("d", valueline1)
+        // .on("mouseover", function() { focusline.style("display", null); })
+        // .on("mouseout", function() { focusline.style("display", "none"); })
+        // .on("mousemove", mousemove)
+        ;
+
+    d3.selectAll(".axis--x").remove();
+    d3.selectAll(".axis--y1").remove();
+    d3.selectAll(".axis--y2").remove();
+
+
+    g1.append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+
+    g1.append("g")
+        .attr("class", "axis axis--y1")
+        .call(yAxis1)
+        .append("text")
+          .attr("class", "axis-title")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -45)
+          .attr("dy", ".9em")
+          .style("text-anchor", "end") // label align
+          .attr("fill", "#5D6971")
+          .text("Share");
+
+    // Add the Y1 Axis
+    g1.append("g")
+        .attr("class", "axis--y2")
+        .attr("transform", "translate( " + width + ", 0 )")
+        .call(d3.axisRight(y2))
+        .append("text")
+            .attr("class", "axis-title")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 75)
+            .attr("dy", ".9em")
+            .style("text-anchor", "end") // label align
+            .attr("fill", "blue")
+            .text("Total porfolio, rur"); // y axis label
+
+} //end update
+
+
+// create the svg 1
+var svg = d3.select("#chart1");
+var margin = {top: 40, right: 100, bottom: 180, left: 50};
+var width = +svg.attr("width") - margin.left - margin.right;
+var height = +svg.attr("height") - margin.top - margin.bottom;
+
+var g1 = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart1");
+
+var x = d3.scaleTime().range([0, width]);
+var y1 = d3.scaleLinear().range([height, 0]);
+var y2 = d3.scaleLinear().range([height, 0]);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+// var color = d3.scaleOrdinal()
+//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+var xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxis1 =  d3.axisLeft(y1).ticks(10, "%");
+var yAxis2 =  d3.axisRight(y2).ticks(10).tickFormat(function(d) { return parseInt(d / 1000) + "k"; });
+
+// g1.append("g")
+//     .attr("class", "axis axis--x")
+//     .attr("transform", "translate(0," + height + ")")
+//     .call(xAxis);
+
+// g1.append("g")
+//     .attr("class", "axis axis--y1")
+//     .call(yAxis1)
+//     .append("text")
+//       .attr("class", "axis-title")
+//       .attr("transform", "rotate(-90)")
+//       .attr("y", -45)
+//       .attr("dy", ".9em")
+//       .style("text-anchor", "end") // label align
+//       .attr("fill", "#5D6971")
+//       .text("Share");
+
+// // Add the Y1 Axis
+// g1.append("g")
+//     .attr("class", "axis--y2")
+//     .attr("transform", "translate( " + width + ", 0 )")
+//     .call(d3.axisRight(y2))
+//     .append("text")
+//         .attr("class", "axis-title")
+//         .attr("transform", "rotate(-90)")
+//         .attr("y", 75)
+//         .attr("dy", ".9em")
+//         .style("text-anchor", "end") // label align
+//         .attr("fill", "blue")
+//         .text("Total porfolio, rur"); // y axis label
+
+// chart title
+g1.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")  
+    .style("font-size", "20px") 
+    // .style("text-decoration", "underline") 
+    .attr("fill", 'blue') 
+    .text("Портфель");
+
+// legend
+var legend = g1.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "start")
+    .selectAll("g")
+    .data(keys)
+    .enter().append("g")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+legend.append("rect")
+    .attr("x", 3)
+    .attr("y", height + 30)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color);
+
+legend.append("text")
+    .attr("x", 30)
+    .attr("y", height + 30 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for score
+g1.append("line")
+    .attr("x1", width - 35)
+    .attr("x2", width)
+    .attr("y1", height + 35)
+    .attr("y2", height + 35)
+    .style("stroke-width", 4)
+    .style("stroke", 'blue');
+
+g1.append("text")
+    .attr("x", width - 44)
+    .attr("y", height + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Total portfolio, rur");
+
+// tooltip bits, initial display is hidden
+var tooltip1 = svg.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip1.append("rect")
+    .attr("width", 130)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.6);
+
+tooltip1.append("text")
+    .attr("x", 65)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+// base init
+seriesNest = d3.nest()
+  .key(d =>  d.variable) //.sortKeys(d3.ascending)
+  .entries(data_share);
+
+// console.log('init data_share', data_share);
+
+// generate initial graph using first series name
+series = seriesNest[0].key;
+// var series = 'principal_debt_amount';
+filtered_data = filter_debt(data_share, 'variable', series);
+filtered_data_sum = filter_debt(data_sum, 'variable', series);
+// console.log('filter by', series, filtered);
+draw_debt(filtered_data, filtered_data_sum);
+
+
+//------------------------  CHART 2 ------------------------
+
+
+
+
+// -------------------- HELP FUNCTIONS ---------------------
+
+
+
+// --------------------------------------------------------------------------------------------
+
+// //Circle Data Set
+// var circleData = [
+//   { "cx": 20, "cy": 120, "radius": 20, "color" : "green" },
+//   { "cx": 70, "cy": 170, "radius": 20, "color" : "purple" }];
+
+// //Create the SVG Viewport
+// var svg = d3.select("#chart4").append("svg")
+//                                      .attr("width",200)
+//                                      .attr("height",200);
+
+// //Add circles to the svgContainer
+// var circles = svg.selectAll("circle")
+//                            .data(circleData)
+//                            .enter()
+//                            .append("circle");
+
+// //Add the circle attributes
+// var circleAttributes = circles
+//                        .attr("cx", function (d) { return d.cx; })
+//                        .attr("cy", function (d) { return d.cy; })
+//                        .attr("r", function (d) { return d.radius; })
+//                        .style("fill", function (d) { return d.color; });
+
+
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,658 @@
+<!doctype html>
+<html>
+{% load staticfiles %}
+
+{% load user_tags %}
+
+    <head>
+        <meta charset="utf-8">
+        <title>Migcredit Analytics</title>
+
+        <link rel="stylesheet" href="{% static 'css/main.css' %}">
+        <!-- <link rel="stylesheet" href="{% static 'css/bootstrap-3.3.7.css' %}"> -->
+        <link rel="icon" type="image/png" href="{% static 'imgs/kollega.jpg' %}" />
+        
+
+    </head>
+
+    <body>
+
+      <style>
+
+        /*login/logout button*/
+        .confirm-button {
+          border: 1px solid #fff;
+          border-radius: 5px;
+          display: inline-block;
+          padding: 5px 15px; /* Поля */
+          text-decoration: none; /* Убираем подчёркивание */
+          color: #fff; /* Цвет текста */
+          background: #399000;
+          margin-left: 5px;
+          width: 100px;
+          text-align: center;
+        }
+
+        .confirm-button:hover {
+          opacity: 0.9;
+          cursor: pointer;
+        }
+
+        /*input error*/
+        .error {
+          border: 2px solid #A9371F;
+        }
+      </style>
+
+      <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+      <script type="text/javascript" src="{% static 'koala/polyfill/polyfill.js' %}"></script>
+      <script type="text/javascript" src="{% static 'koala/koala.js' %}"></script>
+      <script type="text/javascript" src="{% static 'js/d3.v3.js' %}"></script>
+
+      <header>
+
+              <div id="first-line">
+
+              <nav class="top-menu">
+        
+                <div style="display: inline-block;vertical-align: middle"><a class="logo" href="/"></a></div>
+                <div style="display: inline-block;margin-left: 20px;">
+
+                  <div id="login">
+                    {% if user.is_authenticated %}
+                      Вы авторизованы как: <span style="color:blue">{{ user.get_username }}</span>
+                      <a href="/logout" class='confirm-button'>Выйти</a> 
+                    {% else %}
+                      <form id="login-form" action="/login" method="post">
+                          {% csrf_token %}
+                              <input name="username" placeholder="Login" type="username" value="">
+                              <input name="password" placeholder="Password" type="password">
+                              <input type="submit" onclick="" class='confirm-button' value='Вход'>
+                        
+                          {% if error %}
+                              <div id="login-error" style="display:none;"></div>
+                          {% endif %}
+
+                      </form>
+                    {% endif %}
+
+                  </div>
+
+                </div>
+                  {% if user.is_authenticated %}
+                  <ul class="menu-main">
+
+                    {% if request.user|has_group:"risk" or request.user.is_superuser %}
+                      <li><a href="/risks/">Risks</a></li> 
+                    {% endif %}
+
+                    {% if request.user|has_group:"limits" or request.user|has_group:"risk" or request.user.is_superuser %}
+                      <li><a href="/limits/open_now_sql_short/">Limits</a></li> 
+                    {% endif %}
+
+                    {% if request.user|has_group:"risk" or request.user.is_superuser %}
+                      <li><a href="/sales_plan/">Sales plan</a></li> 
+                    {% endif %}
+
+                    {% if request.user|has_group:"marketing" or request.user.is_superuser %}
+                      <li><a href="/marketing/">Marketing</a></li> 
+                    {% endif %}
+
+
+                    {% if request.user.is_superuser %}
+                      <li><a href="/monitoring/">Monitoring</a></li> 
+                    {% endif %}
+
+                    <!-- <li><a href="/mosaic/">Mosaic</a></li>  -->
+
+                  </ul>
+                  {% endif %}
+
+
+              </nav>
+
+
+              </div>
+
+      </header>
+
+
+      <main>
+
+
+
+
+          <!-- <style>
+                    .loader {
+              border: 16px solid #f3f3f3; /* Light grey */
+              border-top: 16px solid #3498db; /* Blue */
+              border-radius: 50%;
+              width: 55px;
+              height: 55px;
+              animation: spin 3s linear infinite;
+          }
+
+          @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+          }
+
+
+
+          </style>
+
+          <div class="loader"></div> -->
+
+
+
+          <!-- <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script> -->
+          <!-- <script type="text/javascript" src="{% static 'js/jquery.chained.min.js' %}"></script> -->
+
+          <!-- spinner code -->
+          <!-- <script type="text/javascript">
+              $(window).ready(function () {
+                   $('.loader').hide();
+
+              });
+
+
+            
+          </script>
+-->
+
+
+
+        {% if user.is_authenticated %}
+        
+          {% block content %}
+
+          {% endblock %}
+
+          <center>
+            <p style='color: green;font: 20px sans-serif;'>FPD by ResionResident</p>
+          </center>
+
+          <style>
+
+            path {
+              stroke:white;
+              stroke-width: 0.5px;
+            }
+
+            body {
+              font-family: Arial, sans-serif;
+            }
+
+            .appl {
+              font: 10px sans-serif;
+              font-weight: bold;
+            }
+
+            .legend {
+              font-size: 12px;
+            }
+
+            div.tooltip {   
+              position: absolute;           
+              text-align: center;           
+              width: 150px;                  
+              height: 25px;                 
+              padding: 2px;             
+              font-size: 10px;     
+              background: #FFFFE0;
+              border: 1px;      
+              border-radius: 8px;           
+              pointer-events: none;         
+            } 
+
+            .feature {
+                fill: #adfcad;
+                /*opacity: 1;*/
+            } 
+
+            .feature.active {
+                /*fill: orange;*/
+                opacity: 1;
+            } 
+
+          </style>
+
+          <script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+          <script type="text/javascript" src="{% static 'js/queue.v1.min.js' %}"></script>
+          <script type="text/javascript" src="{% static 'map/topojson.v2.min.js' %}"></script>
+
+          <script type="text/javascript">
+
+            // ---------------------------------
+
+            var region_fpd = JSON.parse('{{ json_region_fpd | escapejs }}');
+
+            var width = 1860, height = 900;
+            var active = d3.select(null)
+
+            var formatFloat = d3.format(".3f");
+
+            // var canvas = d3.select("body").append("canvas");
+            // var canvas = d3.select("canvas");
+            // var ctx = canvas.node().getContext("2d");
+
+            // Setting color domains(intervals of values) for our map
+
+            var color_domain = [0.05, 0.1, 0.15, 0.2, 0.25]
+            var ext_color_domain = [0, 0.05, 0.1, 0.15, 0.2, 0.25]
+            var legend_labels = ["< 0.05", "0.05 - 0.1", "0.1 - 0.15", "0.15 - 0.2", "0.2 - 0.25", "> 0.25"]              
+            var color = d3.scale.threshold()
+              .domain(color_domain)
+              .range(["#adfcad", "#ffcb40", "#ffba00", "#ff7d73", "#ff4e40", "#ff1300"]);
+
+            var div = d3.select("body").append("div")   
+              .attr("class", "tooltip")               
+              .style("opacity", 0);
+
+
+
+            //-------------
+
+            var zoom = d3.zoom()
+              .scaleExtent([0, 20])
+              .translateExtent([[0, 0], [width, height]])
+              .extent([[0, 0], [width, height]])
+              .on("zoom", function() {
+
+                  // total transform
+                  g.attr("transform", d3.event.transform);
+
+                  // transfrom markes
+                  g.selectAll("circle")
+                    .attr("r", function() {    
+                      var r = 3 / d3.event.transform.k;
+                      // var obj = d3.select(this);
+                      // obj.style("stroke-width", r < 4 ? (r < 2 ? 0.5 : 1) : 2);
+                      return r;
+                  });
+
+                  // transform boundaries
+                  g.selectAll("path.feature")
+                    .style("stroke-width", function() {    
+                      var w = 0.5 / (d3.event.transform.k * 0.5);
+                      // var obj = d3.select(this);
+                      // obj.style("stroke-width", r < 4 ? (r < 2 ? 0.5 : 1) : 2);
+                      return w + 'px';
+                  });
+
+
+            });
+
+            //-------------
+            var svg = d3.select("body").append("svg")
+              .attr("width", width)
+              .attr("height", height)
+              .style("margin", "-65px auto")
+              .call(zoom)
+              .on("click", stopped, true);
+
+            // svg.append("rect")
+            //   .attr("class", "background")
+            //   .attr("width", width)
+            //   .attr("height", height)
+            //   .on("click", reset);
+
+            var g = svg.append("g");
+
+            var projection = d3.geoAlbers()
+              .rotate([-100, 0])
+              .center([-10, 65])
+              .parallels([52, 64])
+              .scale(1100)
+              .translate([width / 2, height / 2])
+              .precision(.1)
+              ;
+
+            var path = d3.geoPath().projection(projection);
+
+            //Reading map file and data
+            queue()
+              // .defer(d3.json, "{% static 'map/russia_1e-7sr.json' %}") // regions boundaries
+              .defer(d3.json, "{% static 'map/russia_2015.json' %}") // regions boundaries
+              // .defer(d3.csv, "{% static 'map/example/Accidents.csv' %}")
+              // .defer(d3.csv, "{% static 'map/region_info.csv' %}")
+              .await(load_data);
+
+            //Start of Choropleth drawing
+
+              var rateById = {};
+              var nameById = {};
+
+              region_fpd.forEach(function(d) {
+                rateById[d.region_id + '_fpd'] = formatFloat(d.fpd);
+                rateById[d.region_id + '_count'] = d.count;
+
+              });
+
+            console.log(rateById);
+
+
+            function load_data(error, map) {
+
+              if (error) throw error;
+
+              // var rateById = {};
+              // var nameById = {};
+              // data.forEach(function(d) {
+              //   rateById[d.RegionCode] = 0;//+d.Deaths;
+              //   nameById[d.RegionCode] = d.RegionName;
+              // });
+
+
+            //Drawing map
+
+            g.selectAll("path")
+              .data(topojson.feature(map, map.objects.russia).features) //<-- in case topojson.v1.js
+              .enter().append("path")
+              .attr("d", path)
+              .attr("class", "feature")
+              .style("fill", function(d) {
+                // if (d.properties.region_key == '1') {
+                //   return '#ff0000';
+                // } else {
+                //   return "#adfcad"; 
+                // }
+                return color(rateById[d.properties.region_id.substr(0, 2) + '_fpd']); 
+              })
+              .style("opacity", 0.6)
+              //Adding mouseevents
+              .on("mouseover", function(d) {
+                  d3.select(this).transition().duration(300).style("opacity", 1);
+                  div.transition().duration(100)
+                  .style("opacity", 1)
+                  var fpd_value = (rateById[d.properties.region_id.substr(0, 2) + '_fpd'] === undefined) ? 0 : rateById[d.properties.region_id.substr(0, 2)+ '_fpd'];
+                  var count_value = (rateById[d.properties.region_id.substr(0, 2) + '_count'] === undefined) ? 0 : rateById[d.properties.region_id.substr(0, 2) + '_count'];
+                  div.text(d.properties.region_name + ' fpd: ' + fpd_value + ', count: ' + count_value)
+                  .style("left", (d3.event.pageX) + "px")
+                  .style("top", (d3.event.pageY -30) + "px");
+
+              })
+              .on("mouseout", function() {
+                  d3.select(this)
+                  .transition().duration(300)
+                  .style("opacity", 0.6);
+                  div.transition().duration(300)
+                  .style("opacity", 0);
+              })
+              .on("click", clicked)
+              ;
+            
+             //Adding cities on the map
+             //  var appl = svg.selectAll("g.circle")
+             //    .data(applications)
+             //    .enter()
+             //    .append("g")
+             //    .attr("class", "circle")
+             //    .attr("transform", function(d) { return "translate(" + projection([d.lon, d.lat]) + ")"; });
+
+             //  appl.append("circle")
+             //    .attr("r", 3)
+             //    .style("fill", "red")
+             //    .style("opacity", 0.4);
+
+             // appl.append("text")
+             //  .attr("x", 5)
+             //  .text(function(d) { return d.ucdb_id; });
+
+             
+
+              // var appls = g.append("g")
+              //   .attr("class", "appls")
+              //   .selectAll("circle")
+              //     .data(fpd)
+              //     .enter()
+              //     .append("circle")
+              //     .attr("transform", function(d) { return "translate(" + projection([d.lon, d.lat]) + ")"; })
+              //     .attr("r", 3)
+              //     .attr("fill", "red")
+              //     .style("opacity", 0.4)
+              //     ;
+
+
+
+
+            }; // <-- End of map drawing
+
+            //Adding legend for our Choropleth
+
+            var legend = svg.selectAll("g.legend")
+              .data(ext_color_domain)
+              .enter().append("g")
+              .attr("class", "legend");
+
+            var ls_w = 20, ls_h = 20;
+
+            legend.append("rect")
+              .attr("x", 20)
+              .attr("y", function(d, i){ return height/1.3 - (i*ls_h) - 2*ls_h;})
+              .attr("width", ls_w)
+              .attr("height", ls_h)
+              .style("fill", function(d, i) { return color(d); })
+              .style("opacity", 0.8);
+
+            legend.append("text")
+              .attr("x", 50)
+              .attr("y", function(d, i){ return height/1.3 - (i*ls_h) - ls_h - 4;})
+              .text(function(d, i){ return legend_labels[i]; });
+
+
+            // function zoomed() {
+            //   g.attr("transform", d3.event.transform);
+            // }
+            
+            function clicked(d) {
+              if (active.node() === this) return reset();
+              active.classed("active", false);
+              active = d3.select(this).classed("active", true);
+
+              var bounds = path.bounds(d),
+                  dx = bounds[1][0] - bounds[0][0],
+                  dy = bounds[1][1] - bounds[0][1],
+                  x = (bounds[0][0] + bounds[1][0]) / 2,
+                  y = (bounds[0][1] + bounds[1][1]) / 2,
+                  scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height))),
+                  translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+              svg.transition()
+                  .duration(750)
+                  .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) );
+            }
+
+            function reset() {
+              active.classed("active", false);
+              active = d3.select(null);
+
+              svg.transition()
+                  .duration(750)
+                  .call( zoom.transform, d3.zoomIdentity );
+            }
+
+            function zoomed() {
+              g.style("stroke-width", 1.5 / d3.event.transform.k + "px");
+              g.attr("transform", d3.event.transform);
+
+            }
+
+            // If the drag behavior prevents the default click,
+            // also stop propagation so we don’t click-to-zoom.
+            function stopped() {
+              if (d3.event.defaultPrevented) d3.event.stopPropagation();
+            }
+
+
+            function collide() {
+              node = this.node();
+              nodeBox = node.getBBox();
+              nodeLeft = nodeBox.x;
+              nodeRight = nodeBox.x + nodeBox.width;
+              nodeTop = nodeBox.y;
+              nodeBottom = nodeBox.y + nodeBox.height;
+
+              d3.selectAll("circle")
+                .attr("fill", function() {
+                  if (this !== node) {
+                    otherBox = this.getBBox();
+                    
+                    otherLeft = otherBox.x;
+                    otherRight = otherBox.x + otherBox.width;
+                    otherTop = otherBox.y;
+                    otherBottom = otherBox.y + otherBox.height;
+                    
+                    collideHoriz = nodeLeft < otherRight && nodeRight > otherLeft;
+                    collideVert = nodeTop < otherBottom && nodeBottom > otherTop;
+                    
+                    if ( collideHoriz && collideVert) {
+                      return "tomato";
+                    } else {
+                      return "none"
+                    }
+                    
+                  } else {
+                    return "none";
+                  }
+                });
+            }
+
+
+          </script>
+
+        {% else %}
+
+         <!-- <center><img style="width:100%; margin-top: 5px;"" src="{% static 'imgs/perekatipole.jpg' %}" /></center> -->
+
+         <!----------------------------------- KOALA ------------------------------------->
+
+          <center style="margin-top: 50px;">
+            <div id="dots"></div>
+
+          </center>
+
+    <script type="text/javascript">
+      // Code left intentionally unminimized for your reading pleasure.
+
+      (function() {
+        window.shownFile = 'none';
+
+        // Try you must. If there is an error report it to me.
+        try {
+
+          function basicLoad(location) {
+            // var possible = ['koalas', 'koalas1', 'koalas2', 'koalas3'];
+            // var file = "{% static 'koala/img/' %}" + possible[Math.floor(Math.random() * possible.length)] + ".jpg";
+            var file = "{% static 'koala/img/mig.jpg' %}";
+            return {
+              file: file,
+              shownFile: location.protocol + '//' + location.host + location.pathname + file
+            };
+          }
+
+          var parse = basicLoad(location);
+          if (!parse) return;
+          var file = parse.file;
+          window.shownFile = parse.shownFile;
+
+          if (parse.background) {
+            d3.select(document.body)
+              .style('background', parse.background);
+          }
+        
+          function onEvent(what, value) {
+    
+            if (what === 'LayerClear' && value == 0) {
+              d3.select('#next')
+                .style('display', null)
+                .select('input')
+                  .on('keydown', function() {
+                    d3.select('div.err').remove();
+                    if (d3.event.keyCode !== 13) return;
+                    var input = d3.select(this).property('value');
+
+                  });
+            }
+          }
+
+          var img = new Image();
+          img.onload = function() {
+            var colorData;
+            try {
+              colorData = koala.loadImage(this);
+            } catch (e) {
+              colorData = null;
+              track('BadLoad', "Msg: '" + e.message + "' file: '" + file + "'");
+              alert("Sorry, KoalsToTheMax could not load the image '" + file + "'");
+              setTimeout(function() {
+                window.location.href = domian;
+              }, 750);
+            }
+            if (colorData) {
+              koala.makeCircles("#dots", colorData, onEvent);
+              // track('GoodLoad', 'Yay');
+            }
+          };
+          img.src = file;
+        } catch (e) {
+          track('Problemo', String(e.message));
+        }
+
+        // // Local download functionality
+        // var saveNumber = 0;
+        // d3.select('#love').on('click', function() {
+        //   saveNumber++;
+        //   track('SaveSVG', saveNumber);
+        //   svgData = d3.select('#dots').html();
+        //   if (svgData.indexOf('<svg') !== -1) {
+        //     prefix = [
+        //       '<?xml version="1.0" encoding="utf-8"?>',
+        //       '<!-- Generator: KoalasToTheMax.com -->',
+        //       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+        //     ];
+        //     saveAs(new Blob(
+        //       [svgData.replace('<svg', prefix.join(' ') + '<svg')],
+        //       {type: "text/plain;charset=utf-8"}
+        //     ), "KoalasToTheMax.svg");
+        //   } else {
+        //     track('SaveSVG', 'Fail');
+        //   }
+        // });
+
+      })();
+    </script>
+
+           <!--------------------- END KOALA ------------------------------>
+
+        {% endif %}
+
+        <script>
+        
+
+          if ($('#login-error').length > 0) {
+
+              $("form#login-form input[type=username], form#login-form input[type=password]").addClass('error');
+
+              setTimeout('$("form#login-form input[type=username], form#login-form input[type=password]").removeClass("error").fadeIn(5000);', 2000);
+
+          }
+
+        </script>
+
+
+      </main>
+
+      <footer></footer>
+
+    </body>
+</html>
+
+<!-- 
+
+http://www.koalastothemax.com?https://krednall.ru/wp-content/uploads/2017/07/photo.jpg 
+
+http://www.koalastothemax.com/?aHR0cHM6Ly9rcmVkbmFsbC5ydS93cC1jb250ZW50L3VwbG9hZHMvMjAxNy8wNy9waG90by5qcGc=
+
+-->
+

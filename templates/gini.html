@@ -1,0 +1,1096 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+<style> /* set the CSS */
+
+/*disable ios svg color change on touchstart  */
+svg {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+.axislabel, .tick { font: 14px Arial;}
+
+path {
+  stroke: #ccc;
+  stroke-width: 1.5px;
+  fill: none;
+}
+
+path:hover {
+  stroke-width: 3px;
+}
+
+#chartContainer{
+  position:absolute;
+  top:180px;
+  left:0px;
+}
+
+#legendContainer{
+  position:absolute;
+  top:10px;
+  left:1000px;
+  overflow: auto;
+  height: 1500px;
+  width:800px;
+}
+
+#legend{
+  width:800px;
+  height:1200px;
+}
+
+.legend {
+  font-size: 14px;
+  font-weight: normal;
+  text-anchor: left;
+}
+
+.legendcheckbox{
+  cursor: pointer;
+}
+
+.xaxislabel,  .xaxislinedetail{
+  font-size: 15px;
+}
+
+#toggle{
+  position:absolute;
+  top:10px;
+  left:270px;
+}
+
+#reset{
+  position:absolute;
+  top:10px;
+  left:333px;
+}
+
+#updateButton{
+  position:absolute;
+  top:10px;
+  left:100px;
+}
+
+#restoreButton{
+  position:absolute;
+  top:10px;
+  left:150px;
+}
+
+#businessTypeLabel{
+  position:absolute;
+  top:0px;
+  left:450px;
+}
+
+#clientTypeLabel{
+  position:absolute;
+  top:30px;
+  left:450px;
+}
+
+#businessAndClientTypeLabel{
+  position:absolute;
+  top:60px;
+  left:450px;
+}
+
+#toggleCore{
+  position:absolute;
+  top:10px;
+  left:560px;
+}
+
+#toggleDigital{
+  position:absolute;
+  top:10px;
+  left:625px;
+}
+
+#togglePos{
+  position:absolute;
+  top:10px;
+  left:700px;
+}
+
+#toggleMigone{
+  position:absolute;
+  top:10px;
+  left:765px;
+}
+
+#toggleNew{
+  position:absolute;
+  top:40px;
+  left:560px;
+}
+
+#toggleRepeat{
+  position:absolute;
+  top:40px;
+  left:625px;
+}
+
+#toggleCoreRepeat{
+  position:absolute;
+  top:75px;
+  left:625px;
+}
+
+#toggleCoreNew{
+  position:absolute;
+  top:105px;
+  left:625px;
+}
+
+#toggleDigitalRepeat{
+  position:absolute;
+  top:75px;
+  left:735px;
+}
+
+#toggleDigitalNew{
+  position:absolute;
+  top:105px;
+  left:735px;
+}
+
+
+toggle{
+  border-radius:5px;
+  background:#999;
+  border:0;
+  color:#fff;
+}
+
+#seriesMenu{
+  position:absolute;
+  top:12px;
+  left:57px;
+}
+.ygrid line {
+  stroke: lightgrey;
+  stroke-opacity: 0.7;
+  stroke-dasharray: 6,6;
+  //shape-rendering: crispEdges;
+}
+
+.ygrid path {
+  //stroke-width: 0;
+}
+</style>
+
+
+<!-- DATA EXAMPLE
+
+[
+  {"client_type": "new", "station_id": "Digital_New_NbchHit", "variable": "KS", "business_type": "digital", "date": "2018_02", "name": "Digital_New_NbchHit: MainScore_201512_NewClients_NBCHhit", "value": 20.57},
+   {"client_type": "new", "station_id": "Core_New_NbchHit", "variable": "KS", "business_type": "core", "date": "2018_02", "name": "Core_New_NbchHit: MainScore_201512_NewClients_NBCHhit", "value": 22.44}
+]
+ -->
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+
+
+
+<div style="position: relative;">
+  <!-- <div id="updateButton">
+      <input name="updateButton" 
+             type="button" 
+             value="Large Dataset" 
+             onclick="updateData()" />
+  </div> -->
+  <div id="businessTypeLabel">
+           <p>business type:</p>
+  </div>
+  <div id="clientTypeLabel">
+           <p>client type:</p>
+  </div>
+  <div id="businessAndClientTypeLabel">
+           <p>business & client type:</p>
+  </div>
+  <div id="toggleCore">
+          <input name="toggleButton"
+           type="button"
+           value="Core"
+           onclick="toggleBusinessType('core')" />
+  </div>
+  <div id="toggleDigital">
+          <input name="toggleButton"
+           type="button"
+           value="Digital"
+           onclick="toggleBusinessType('digital')" />
+  </div>
+  <div id="togglePos">
+          <input name="toggleButton"
+           type="button"
+           value="POS"
+           onclick="toggleBusinessType('pos')" />
+  </div>
+  <div id="toggleMigone">
+          <input name="toggleButton"
+           type="button"
+           value="MigOne"
+           onclick="toggleBusinessType('migone')" />
+  </div>
+  <div id="toggleNew">
+          <input name="toggleButton"
+           type="button"
+           value="New"
+           onclick="toggleClientType('new')" />
+  </div>
+  <div id="toggleRepeat">
+          <input name="toggleButton"
+           type="button"
+           value="Repeat"
+           onclick="toggleClientType('repeat')" />
+  </div>
+
+  <div id="toggleCoreRepeat">
+          <input name="toggleButton"
+           type="button"
+           value="Core Repeat"
+           onclick="toggleBusinessAndClientType('core', 'repeat')" />
+  </div>
+
+  <div id="toggleCoreNew">
+          <input name="toggleButton"
+           type="button"
+           value="Core New"
+           onclick="toggleBusinessAndClientType('core', 'new')" />
+  </div>
+
+  <div id="toggleDigitalRepeat">
+          <input name="toggleButton"
+           type="button"
+           value="Digital Repeat"
+           onclick="toggleBusinessAndClientType('digital', 'repeat')" />
+  </div>
+
+  <div id="toggleDigitalNew">
+          <input name="toggleButton"
+           type="button"
+           value="Digital New"
+           onclick="toggleBusinessAndClientType('digital', 'new')" />
+  </div>
+
+  <div id="restoreButton">
+      <input name="restoreButton" 
+             type="button" 
+             value="Original Dataset" 
+             onclick="restoreData()" />
+  </div>
+
+  <!-- SVG for main chart -->
+  <svg></svg>
+
+  <!-- gini, ks toggle -->
+  <div id="seriesMenu"></div>
+
+  <div id="toggle">
+          <input name="toggleButton"
+           type="button"
+           value="Toggle"
+           onclick="toggle()" />
+  </div>
+  <div id="reset">
+          <input name="toggleButton"
+           type="button"
+           value="Reset all"
+           onclick="reset()" />
+  </div>
+
+  <div id="legendContainer" class="legendContainer">
+  <svg id="legend"></svg>
+  </div>
+
+</div>  
+
+<script>
+
+/* shorokh */
+
+const bisectDate = d3.bisector(d => d.date).left;
+
+function filterJSON(json, key, value) {
+  var result = [];
+  json.forEach(function(val,idx,arr){
+    if(val[key] == value){
+      result.push(val);
+    }
+  });
+  return result;
+}
+
+// Set dimensions
+const margin = {
+  top: 150,
+  right:40,
+  left: 50,
+  bottom: 200
+};
+const width = 1000 - margin.right - margin.left;
+const height = 800 - margin.top - margin.bottom;
+
+var svg = d3.select("svg")
+  .attr('width', width + margin.right + margin.left)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+svg.append("defs")
+  .append("clipPath")
+  .attr("id", "clip")
+  .append("rect")
+  .attr("width", width)
+  .attr("height", height);
+
+// Parse the time 
+// var parseDate = d3.timeParse("%Y-%m-%dT%H:%M:%S.%L");
+var parseDate = d3.timeParse("%Y-%m");
+
+//Set the ranges
+var x = d3.scaleTime()
+  .domain([new Date(2018, 01, 01), new Date(2018, 01, 10)])
+  // .domain(d3.extent(data, function(d) { return d.date; }))
+  .range([0, width]);
+
+var y = d3.scaleLinear().range([height, 0]);
+
+var xAxis = d3.axisBottom(x)
+.tickFormat(d3.timeFormat("%Y-%m-%d"));
+  //.tickSize(-height);
+
+var yAxis = d3.axisLeft(y)
+.tickSize(-width);
+
+// Define the line
+var stationLine = d3.line()
+  // .x(d => x(d.date))
+  // .y(d => y(d.value));
+  .x(function(d) { return x(d.date); })
+  .y(function(d) { return y(d.value); });
+
+var xGroup = svg.append("g")
+  //.attr("class", "axis") 
+  .attr("transform", "translate(0," + height + ")");
+
+// zoom effect
+var zoom = d3.zoom()
+  .scaleExtent([1, 32])
+  .extent([[0, 0], [width, height]])
+  .translateExtent([[0, 0], [width, height]])
+  .on("zoom", zoomed);
+
+// zoom panel
+var zoomRect = svg.append("rect")
+  .attr("width", width)
+  .attr("height", height)
+  .attr("fill", "none")
+  .attr("pointer-events", "all")
+  //.on("mousemove", mousemove)
+  .call(zoom);
+
+//globals
+var data;
+var series;
+var dataFiltered;
+var lines;
+var updateOn;
+var maxChart;
+var maxLine;
+
+var json = JSON.parse('{{ gini_json | escapejs }}');
+
+
+// d3.json(datafile, function(error, json) {
+  json.forEach(function(d) {
+    d.value = +d.value;
+    d.date = parseDate(d.date);
+  });
+
+console.log('json\n', json);
+
+
+seriesNest = d3.nest()
+  .key(d =>  d.variable).sortKeys(d3.ascending)
+  .entries(json);
+
+  console.log('seriesNest\n', seriesNest);
+
+  // выпадающий список
+  var list = d3.select("#seriesMenu")
+    .append("select");
+
+  list.selectAll("option")
+  .data(seriesNest)
+  .enter()
+  .append("option")
+  .attr("value", d => d.key)
+  .text( d => d.key );
+ 
+  list.on("change", function () {
+      series = d3.event.target.value;
+      if (updateOn == true) {
+        console.log('updateOn is true using updatedJson');
+        json = updatedJson;
+        data = filterJSON(json, 'variable', series ); //global data set
+        updateGraph(data);
+        }
+      else { 
+       console.log('updateOn is false using original json');
+       if (updateOn == false) { json = originalJson; } else {}
+       data = filterJSON(json, 'variable', series ); //global data set
+       updateGraph(data);}
+   });
+
+    // generate initial graph using first series name
+    series = seriesNest[0].key;
+    data = filterJSON(json, 'variable', series);
+    updateGraph(data);
+
+//});
+// -------------------
+
+function updateGraph(data) {
+
+  d3.select(".mouse-line").remove();
+  d3.selectAll(".mouse-per-line circle").remove();
+  d3.selectAll(".mouse-per-line text").remove();
+  d3.selectAll(".mouse-per-line").remove();
+  //  d3.selectAll(".legend").remove();
+  // d3.selectAll(".legendData").remove();
+  // d3.selectAll(".legendcheckbox").remove();
+  // d3.selectAll(".line").remove(); 
+  d3.selectAll(".xaxismax").remove();
+
+  data.forEach(d => d.value = +d.value);
+
+  // console.log('data[0].variable ' + data[0].variable);
+ 
+  var t = d3.transition()
+      .duration(750);
+
+  dataCopy = data;
+  dataFiltered = dataCopy.filter(d => $("." + d.station_id).attr("fill") != "#ccc"); 
+  maxChart = d3.max((dataFiltered).sort(function(a, b) { return d3.descending(a.value, b.value)}));
+  console.log ('updateGraph dataFiltered length: ' + dataFiltered.length);
+  console.log('updateGraph dataFiltered max: ' + d3.max(dataFiltered, d => d.value));
+  x.domain(d3.extent(dataFiltered, d => d.date));
+  y.domain([d3.min(dataFiltered, d => d.value), d3.max(dataFiltered, d => d.value)]);
+ 
+  var color = d3.scaleOrdinal()
+    .domain(data)
+    .range(["#3957ff", "#d3fe14", "#c9080a", "#fec7f8", "#0b7b3e", "#0bf0e9", "#c203c8", "#fd9b39", "#888593", "#906407", "#98ba7f", "#fe6794", "#10b0ff", "#ac7bff", "#fee7c0", "#964c63", "#1da49c", "#0ad811", "#bbd9fd", "#fe6cfe", "#297192", "#d1a09c", "#78579e", "#81ffad", "#739400", "#ca6949", "#d9bf01", "#646a58", "#d5097e", "#bb73a9", "#ccf6e9", "#9cb4b6", "#b6a7d4", "#9e8c62", "#6e83c8", "#01af64", "#a71afd", "#cfe589", "#d4ccd1", "#fd4109", "#bf8f0e", "#2f786e", "#4ed1a5", "#d8bb7d", "#a54509", "#6a9276", "#a4777a", "#fc12c9", "#606f15", "#3cc4d9", "#f31c4e", "#73616f", "#f097c6", "#fc8772", "#92a6fe", "#875b44", "#699ab3", "#94bc19", "#7d5bf0", "#d24dfe", "#c85b74", "#68ff57", "#b62347", "#994b91", "#646b8c"]);  
+
+  // var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+  zoomRect.call(zoom.transform, d3.zoomIdentity);
+    
+  // Nest the entries by station
+  dataNest = d3.nest() //global dataNest set
+    .key(d => d.station_id)
+    .entries(data);
+  
+  // match data with selector status
+  var result = dataNest.filter(d => $("." + d.key).attr("fill") != "#ccc");
+
+  // JOIN new data with old elements.
+  var station = svg.selectAll(".line")
+    .data(result, d => d.key)
+    .on("mouseover", handleMouseOver)
+    .on("mouseout", handleMouseOut);            
+    
+  // ENTER new elements present in new data.
+  station.enter().append("path")
+    .style("stroke", function(d,i) { return d.color = color(d.key); })
+    .attr("class", "line")
+    .on("mouseover", handleMouseOver)
+    .on("mouseout", handleMouseOut)
+    .attr("id", d => 'tag'+d.key)
+    .attr("linekey", d => d.key)
+    .attr("name", d => d.values[0].name)
+    .attr("d", d => stationLine(d.values))
+    .attr("clip-path", "url(#clip)")
+    ;
+
+
+
+  // // station.filter(function(d) { return d.close < 400 })
+  // // add circles
+  // var selectCircle = svg.selectAll(".circle")
+  //   .data(json)
+  //   .enter().append("circle")
+  //   .attr("class", "circle")
+  //   .attr("r", 3.5)
+  //   .style("fill", function(d,i) { return d.color = color(d.key); })
+  //   .attr("cx", function(d) { return x(d.date) })
+  //   .attr("cy", function(d) { return y(d.value) });
+
+
+  station.transition(t)
+      .attr("id", d => 'tag' + d.key)
+      .attr("d", d => stationLine(d.values));
+     
+  // EXIT old elements not present in new data.
+  station.exit()
+    .transition(t)
+      .remove();
+
+  // text label for the x axis
+  var txtMaxLine = svg.append("text")
+      .attr("transform",
+            "translate(" + (0) + " ," +
+                           (height + 100) + ")")
+      .style("text-anchor", "left")
+      .attr("class", "xaxismaxline")
+      //.text('Line Max: ' + maxLine.value + " " + maxLine.date + " " + maxLine.name);
+
+  // JOIN new data with old elements.
+  var legend = d3.select("#legend")
+    .selectAll(".legend")
+    .data(dataNest, d => d.key)
+    .attr("id", d => 'legend' + d.key);
+
+  // Add the Legend text
+  legend.enter().append("text")
+    .attr("x", 80)
+    .attr("y", (d,i) => 20 +i*25)
+    .attr("class", "legend")
+    .text(d => d.values[0].name)
+
+  legend.enter().append("text")
+      .attr("x", 0)
+      .attr("y", (d, i) => 20 +i*25 )  // spacing
+      .attr("id", (d,i) => "legendData" + d.key)
+      .attr("class", "legendData");
+
+  // ENTER new elements present in new data checkboxes
+  legend.enter().append("rect")
+    .attr("width", 15)
+    .attr("height", 15)
+    .attr("x", 50)
+    .attr("y", (d, i) => 7.5 +i*25 )  // spacing
+    .attr("fill", d => color(d.key))
+    .attr("class", (d,i) => "legendcheckbox " + d.key)
+    .attr("business_type", (d,i) => d.values[0].business_type)
+    .attr("client_type", (d,i) => d.values[0].client_type)
+    .attr("id", (d,i) => "legendRect" + d.key)
+    .on("mouseover", function(d){
+      tempid = d.key;
+      dataFilteredTemp = dataFiltered.filter(d => d.station_id == tempid );
+      maxLine = d3.max((dataFilteredTemp).sort(function(a, b) { return d3.descending(a.value, b.value)}));
+      svg.selectAll(".line").style("opacity", 0.15);
+      svg.select('path#tag' + d.key + '.line')
+        .style("stroke-width", 5)
+        .style("opacity", 1);
+      d3.select(".xaxislinedetail")
+        .text(d.values[0].name);
+      d3.select(".xaxismaxline")
+              .text('Line Max: ' + maxLine.value + " " + maxLine.date + " " + maxLine.name);
+      d3.selectAll(".legendcheckbox")
+              .style("opacity", 0.15);
+      d3.select("#legendRect" + d.key)
+              .style("opacity", 1);   
+    })
+    .on("mouseout", function(d){
+      svg.selectAll(".line").style("opacity", 1);
+      svg.select('path#tag' + d.key + '.line')
+      .style("stroke-width", 1.5);
+      d3.select(".xaxislinedetail")
+        .text("");
+      d3.select(".xaxismaxline")
+              .text("");
+      d3.selectAll(".legendcheckbox")
+              .style("opacity", 1);
+    })
+    .on("click", function(d){
+      //console.log('click ' + d.values[0].name + ' ' + d.values[0].variable);
+      d3.select(this).attr("fill", function(d){
+        if(d3.select(this).attr("fill")  == "#ccc"){ //grey fill
+          return color(d.key);
+        } else {
+          return "#ccc";
+          }
+        });
+      // matching the data with selector status
+      var result = dataNest.filter(d => $("." + d.key).attr("fill") != "#ccc");
+      dataFiltered = dataCopy.filter(d => $("." + d.station_id).attr("fill") != "#ccc");
+      maxChart = d3.max((dataFiltered).sort(function(a, b) { return d3.descending(a.value, b.value)}))
+      //console.log('dataCopy[0].variable ' + dataCopy[0].variable);
+      //console.log ('data length: ' + dataCopy.length);
+      //console.log('data max: ' + d3.max(dataCopy, d => d.value));
+      //console.log ('dataFiltered length: ' + dataFiltered.length);
+      //console.log('dataFiltered max: ' + d3.max(dataFiltered, d => d.value));
+      x.domain(d3.extent(dataFiltered, d => d.date));
+      y.domain([d3.min(dataFiltered, d => d.value), d3.max(dataFiltered, d => d.value )]);
+      
+      d3.selectAll(".line")   // change the line
+        .transition(t)
+        .attr("d", d => stationLine(d.values)
+      );
+
+      svg.select(".ygrid") // change the y axis
+        .transition(t)
+        .call(yAxis);
+      
+      yAxis.scale(y);
+
+      d3.select(".ygrid")
+        .transition(t)
+        .call(yAxis);
+      
+      // Hide or show the lines based on the ID
+      svg.selectAll(".line").data(result, d => d.key)
+        .enter()
+        .append("path")
+        .attr("id", d => 'tag' + d.key)
+        .attr("class", "line")
+        .attr("linekey", d => d.key)
+        .attr("name", d => d.values[0].name)
+        .attr("clip-path", "url(#clip)")
+        .style("stroke", (d,i)  => d.color = color(d.key))
+        .on("mousemove", handleMouseOver)
+        .on("mouseout", handleMouseOut)
+        .attr("d", d => stationLine(d.values));
+
+      svg.selectAll(".line")
+        .data(result, d => d.key)
+        .exit()
+         .transition(t)
+          .style("opacity", 0)
+          .remove();
+      
+      // svg.selectAll(".xaxismax")
+      //   .text('--Chart Max: ' + maxChart.value + " " + maxChart.date + " " + maxChart.name);
+
+      var mousePerLine = mouseG.selectAll('.mouse-per-line')
+      .data(result)
+      .enter()
+      .append("g")
+      .attr("class", "mouse-per-line")
+      .attr("id", d => 'm' + d.key);
+
+      mousePerLine.append("circle")
+        .attr("r", 7)
+        .style("fill", "none")
+        .style("stroke-width", "1px")
+        .style("opacity", "0");
+
+      mousePerLine.append("text")
+        .attr("transform", "translate(10,3)");
+
+      d3.selectAll(".mouse-per-line")
+        .data(result)
+        .exit()
+        .remove();   
+ 
+    return result;
+    }); //END CLICK 
+                
+  svg.selectAll(".axislabel").remove();
+  svg.selectAll(".ygrid").remove();
+  svg.selectAll(".axis").remove();
+
+  // Add the Y Axis
+  svg.append("g")
+    .attr("class", "ygrid")
+    .transition(t)
+    .call(yAxis);
+    
+  // text label for the y axis
+  svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -40)
+      .attr("x", 0 - (height / 2))
+      .attr("class", "axislabel")
+      .style("text-anchor", "middle")
+      .attr("transform", "rotate(-45)")
+      .text(series);
+    
+  // text label for the x axis
+  // svg.append("text")             
+  //     .attr("transform",
+  //           "translate(" + (width/2) + " ," + 
+  //                          (-10) + ")")
+  //     .style("text-anchor", "middle")
+  //     .attr("class", "xaxislabel");
+
+    // text label for the x axis
+  svg.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height + 50) + ")")
+      .style("text-anchor", "middle")
+      .attr("class", "xaxislinedetail");
+
+  // text label for the x axis
+  var maxText = svg.append("text")             
+      .attr("transform",
+            "translate(" + (0) + " ," + 
+                           (height + 125) + ")")
+      .style("text-anchor", "left")
+      .attr("class", "xaxismax")
+      .text('Chart Max: ' + maxChart.value + " " + maxChart.date + " " + maxChart.name);
+
+  var mouseG = svg.append("g")
+      .attr("class", "mouse-over-effects");
+
+    mouseG.append("path") // this is the black vertical line to follow mouse
+      .attr("class", "mouse-line")
+      .style("stroke", "black")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+      
+  lines = document.getElementsByClassName('line');
+
+  var mousePerLine = mouseG.selectAll('.mouse-per-line')
+    .data(result)
+    .enter()
+    .append("g")
+    .attr("class", "mouse-per-line")
+    .attr("id", d => 'm' + d.key);
+
+    mousePerLine.append("circle")
+      .attr("r", 7)
+      .style("fill", "none")
+      .style("stroke-width", "1px")
+      .style("opacity", "0");
+
+    mousePerLine.append("text")
+      .attr("transform", "translate(10,3)");
+
+    mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+      .attr('width', width) // can't catch mouse events on a g element
+      .attr('height', 200)
+      .attr("transform", "translate(0," + height + ")")
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .on('mouseout', function() { // on mouse out hide line, circles and text
+        d3.select(".mouse-line")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-line circle")
+          .style("opacity", "0");
+        d3.selectAll(".mouse-per-line text")
+          .style("opacity", "0");
+      })
+             .on('mouseover', touchStart)
+      .on('touchstart', touchStart)
+      .on('mousemove', touchMove)
+      .on('touchmove', touchMove);
+
+} // END UPDATEGRAPH
+
+function touchStart ()  { // on mouse in show line, circles and text
+      d3.select(".mouse-line")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-line circle")
+          .style("opacity", "1");
+        d3.selectAll(".mouse-per-line text")
+          .style("opacity", "1");
+}
+
+function touchMove () {
+  // console.log("in tocuhMove function");
+  d3.event.preventDefault();
+  var mouse = d3.mouse(this);
+        var transform = d3.zoomTransform(zoomRect.node());
+        var xtScale = transform.rescaleX(x);
+        d3.select(".mouse-line")
+          .attr("d", function() {
+            //var x0 = xtScale.invert(mouse[0]);
+            var d = "M" + mouse[0] + "," + height;
+            //var d = "M" + x0 + "," + height;
+            d += " " + mouse[0] + "," + 0;
+            //console.log ('mousemove d: ' + d);
+            return d;
+          });
+
+        d3.selectAll(".mouse-per-line")
+          .attr("transform", function(d, i) {
+            //console.log(width/mouse[0]);
+            var xDate = xtScale.invert(mouse[0]),
+                bisect = d3.bisector(function(d) { return d.date; }).right;
+                idx = bisect(d.values, xDate);
+
+            var beginning = 0,
+                end = lines[i].getTotalLength(),
+                target = null;
+
+            var line_coord_begin = lines[i].getPointAtLength(beginning);
+            var line_coord_end = lines[i].getPointAtLength(end);
+
+            // show tips and values only when line is exist
+            d3.select(this).select('circle')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+            d3.select(this).select('text')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+            // d3.select("#legendData" + d.key)
+            //   .style("opacity", function(d) { return ((d3.select("text").attr("fill") != "#ccc" && mouse[0] > line_coord_begin.x && mouse[0] < line_coord_end.x) ? "1" : "0"); })
+
+            while (true){
+
+              target = Math.floor((beginning + end) / 2);
+              pos = lines[i].getPointAtLength(target);
+
+
+              // console.log(i, beginning, end, target, pos.x, mouse[0]);
+              if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                  break;
+              }
+              if (pos.x > mouse[0])      end = target;
+              else if (pos.x < mouse[0]) beginning = target;
+              else break; //position found
+            }
+
+          var fillColor = d3.select("#legendRect" + d.key).attr("fill"); 
+
+          d3.select(this).select('circle')
+            .style("stroke", fillColor)
+            ;
+      
+          d3.select(this).select('text')
+            .text(y.invert(pos.y).toFixed(2));
+
+          d3.select(".xaxislabel")
+            .text(xDate);
+              
+          d3.select("#legendData" + d.key)
+            .text(y.invert(pos.y).toFixed(2));
+
+          return "translate(" + mouse[0] + "," + pos.y +")";
+       });
+}
+
+// Create Event Handlers for mouse
+function handleMouseOver(d, i) {
+  var mouse = d3.mouse(this);
+  var line = d3.select(this).attr('linekey');
+  dataFilteredTemp = dataFiltered.filter(d => d.station_id == line);
+  maxLine = d3.max((dataFilteredTemp).sort(function(a, b) { return d3.descending(a.value, b.value)}))
+  var name = d3.select(this).attr('name');
+  var transform = d3.zoomTransform(zoomRect.node());
+  var xtScale = transform.rescaleX(x);
+  var xDate = xtScale.invert(mouse[0]);
+  d = mouseDate(xtScale, line);
+  var value = y.invert(mouse[1]);
+  d3.select("#legendData" + line)
+               .text(value.toFixed(2));
+  d3.select(".xaxislabel")
+              .text(xDate + " " + d.name + " " + value.toFixed(2));
+  d3.select(".xaxislinedetail")
+              .text(xDate + " " + d.name + " " + value.toFixed(2));
+  d3.selectAll(".legendcheckbox")
+              .style("opacity", 0.15);
+  d3.select("#legendRect" + line)
+              .style("opacity", 1);
+  //console.log(maxLine.value + " " + maxLine.date + " " + maxLine.name);
+  d3.select(".xaxismaxline")
+              .text('Line Max: ' + maxLine.value + " " + maxLine.date + " " + maxLine.name);
+  svg.selectAll(".line").style("opacity", 0.15);
+  d3.select(this)
+    .style("stroke-width", 5)
+    .style("opacity", 1);
+}
+
+function handleMouseOut(d, i) { 
+  d3.select(this)
+    .style("stroke-width", 1.5);
+  d3.selectAll(".legendData")
+               .text("");
+  d3.select(".xaxislabel")
+              .text("");
+  d3.select(".xaxislinedetail")
+              .text("");
+  d3.select(".xaxismaxline")
+              .text("");
+  d3.selectAll(".legendcheckbox")
+              .style("opacity", 1);
+  svg.selectAll(".line").style("opacity", 1);
+}
+
+// toggle
+function toggle(){
+  d3.selectAll(".line")
+    .attr("d", d => stationLine(d.values));
+  d3.select("#legend").selectAll("rect").each(function(d, i) {
+    var onClickFunc = d3.select(this).on("click");
+    onClickFunc.apply(this, [d, i]);
+  });
+}
+
+// reset
+function reset(){
+  d3.selectAll(".line")
+    .attr("d", d => stationLine(d.values));
+  d3.select("#legend").selectAll("rect").each(function(d, i) {
+    var onClickFunc = d3.select(this).on("click");
+    if (d3.select(this).attr("fill") != "#ccc")
+      { 
+      onClickFunc.apply(this, [d, i]);
+      } else {}});
+}
+
+function toggleBusinessType(business_type){
+  d3.selectAll(".line")
+    .attr("d", d => stationLine(d.values));
+
+  d3.select("#legend").selectAll("rect").each(function(d, i) {  
+    var onClickFunc = d3.select(this).on("click");
+    if (d3.select(this).attr('business_type') == business_type) {     
+      if (d3.select(this).attr("fill") == "#ccc") {
+          onClickFunc.apply(this, [d, i]);
+      } else {}    
+    } else {
+      if (d3.select(this).attr("fill") != "#ccc") {
+        onClickFunc.apply(this, [d, i]);
+      } else {}
+    }
+  });
+  console.log('clicking business_type: ' + business_type);
+}
+
+// toggle client type
+function toggleClientType(client_type){
+  d3.selectAll(".line")
+    .attr("d", d => stationLine(d.values));
+
+  d3.select("#legend").selectAll("rect").each(function(d, i) {  
+    var onClickFunc = d3.select(this).on("click");
+    if (d3.select(this).attr('client_type') == client_type) {     
+      if (d3.select(this).attr("fill") == "#ccc") {
+          onClickFunc.apply(this, [d, i]);
+      } else {}    
+    } else {
+      if (d3.select(this).attr("fill") != "#ccc") {
+        onClickFunc.apply(this, [d, i]);
+      } else {}
+    }
+  });
+  console.log('clicking client_type: ' + client_type);
+}
+
+// toggle client type
+function toggleBusinessAndClientType(business_type, client_type){
+  d3.selectAll(".line")
+    .attr("d", d => stationLine(d.values));
+
+  d3.select("#legend").selectAll("rect").each(function(d, i) {  
+    var onClickFunc = d3.select(this).on("click");
+    if ((d3.select(this).attr('business_type') == business_type) && (d3.select(this).attr('client_type') == client_type))    
+    {
+      if (d3.select(this).attr("fill") == "#ccc") {
+          onClickFunc.apply(this, [d, i]);
+      } else {}    
+    } else {
+      if (d3.select(this).attr("fill") != "#ccc") {
+        onClickFunc.apply(this, [d, i]);
+      } else {}
+    }
+  });
+  console.log('clicking business_type: ' + business_type + ', client_type: ' + client_type);
+}
+
+// // toggle client type old
+// function toggleClientType(client_type){
+//   d3.selectAll(".line")
+//     .attr("d", d => stationLine(d.values));
+//   d3.select("#legend").selectAll("rect").each(function(d, i) {
+//     var onClickFunc = d3.select(this).on("click");
+//     if (d3.select(this).attr('client_type') == client_type) { 
+//       console.log('clicking client_type: ' + client_type);
+//       onClickFunc.apply(this, [d, i]);
+//       } else {}});
+// }
+
+
+function mouseDate(xtScale, line, mouse) {
+  var g = d3.select('#tag' + line)._groups[0][0];
+  zoomData = data.filter(d => d.station_id == line); 
+  var x0 = xtScale.invert(d3.mouse(g)[0]);
+  var i = bisectDate(zoomData, x0, 1);
+  var d0 = zoomData[i - 1];
+  var d1 = zoomData[i];
+  var d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+return d;
+}
+
+function zoomed() {
+  var xz = d3.event.transform.rescaleX(x);
+  //var yz = d3.event.transform.rescaleY(y);
+  
+  //axis zoom
+  xGroup.call(xAxis.scale(xz));
+  
+  //line zoom
+  stationLine
+    .x(d => xz(d.date))
+    .y(d => y(d.value));
+  
+  d3.selectAll(".line")
+      .attr("d", d => stationLine(d.values));
+
+}
+
+// Update data section (Called from the onclick)
+// function updateData() {
+//     //window.alert("updateData function here yo");
+//     // Get the data
+// d3.json(largedatafile, function(error, json) {
+//   json.forEach(function(d) {
+//     d.value = +d.value;
+//     d.date = parseDate(d.date);
+//   });
+
+//     // generate initial graph using first series name
+//     series = seriesNest[0].key;
+//     updatedJson = json;
+//     updateOn = !updateOn;
+//     console.log(updateOn);
+//     data = filterJSON(json, 'variable', series);
+//     d3.selectAll(".legend").remove();
+//     d3.selectAll(".legendData").remove();
+//     d3.selectAll(".legendcheckbox").remove();
+//     d3.selectAll(".line").remove();
+//     updateGraph(data);
+// });
+// }
+
+// Update data section (Called from the onclick)
+function restoreData() {
+
+  var json = JSON.parse('{{ gini_json | escapejs }}');
+
+  json.forEach(function(d) {
+    d.value = +d.value;
+    d.date = parseDate(d.date);
+  });
+
+    // generate initial graph using first series name
+    series = seriesNest[0].key;
+    originalJson = json;
+    updateOn = false;
+    console.log(updateOn);
+    data = filterJSON(json, 'variable', series);
+    d3.selectAll(".legend").remove();
+    d3.selectAll(".legendData").remove();
+    d3.selectAll(".legendcheckbox").remove();
+    d3.selectAll(".line").remove();
+    updateGraph(data);
+
+}
+
+// function convertDate(str) {
+//     var date = new Date(str.toDateString()),
+//         mnth = ("0" + (date.getMonth()+1)).slice(-2),
+//         day  = ("0" + date.getDate()).slice(-2);
+//         console.log([date.getFullYear(), mnth, day ].join("-"));
+//     return [ date.getFullYear(), mnth, day ].join("-");
+// }
+
+    
+</script>
+
+{% endblock %}

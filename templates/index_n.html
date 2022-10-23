@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+{% load static %}
+
+    <head>
+        <meta charset="utf-8">
+        <title>Migcredit Analytics</title>
+
+        <link rel="stylesheet" href="{% static 'css/main.css' %}">
+        <!-- <link rel="stylesheet" href="{% static 'css/bootstrap-3.3.7.css' %}"> -->
+        <!-- <link rel="icon" type="image/png" href="{% static 'imgs/logo.png' %}" /> -->
+        <link rel="icon" type="image/png" href="{% static 'imgs/kollega.jpg' %}" />
+
+    </head>
+
+    <body>
+
+        <header>
+
+          <div id="first-line">
+
+        <!-- example -->
+
+         <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+        <!------ Include the above in your HEAD tag ---------->
+
+        <!-- <nav class="top-menu"> -->
+        <nav class="navbar navbar-default">
+          <div class="container-fluid">
+           
+            <div class="navbar-header">
+              <a class="logo" href="/"></a>
+            </div>
+
+           
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              
+              <ul class="nav navbar-nav" style="vertical-align: middle;"> 
+<!--                 
+                <li><a href="/open_now/">Open now</a></li>
+                <li><a href="/scorecard_monitoring/">Scorecard monitoring</a></li>
+                <li><a href="/vintages/">Vintages</a></li>
+                <li><a href="/scorecard_gantt/">Gantt</a></li>
+                <li><a href="/financed_sankey/">Financed sankey</a></li>
+                <li><a href="/gini_badrate/">Gini's by badrate</a></li>
+                <li><a href="/graph_contacts/">Contacts graph</a></li>
+                <li><a href="/one_scorecard_counts/">Scorecard counts</a></li>
+                <li><a href="/month/">Scorecards last month</a></li> -->
+
+                <li><a href="/risks/">Risks</a></li> 
+                
+                <!-- <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Dropdown <span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="#">Action</a></li>
+                    <li><a href="#">Another action</a></li>
+                    <li><a href="#">Something else here</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#">Separated link</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#">One more separated link</a></li>
+                  </ul> -->
+                </li>
+              </ul>
+
+          
+              <form id="signin" class="navbar-form navbar-left" role="form" action="/login" method="post" style="">
+
+                {% if not user.is_authenticated %}
+                {% csrf_token %}
+                    
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                        <input id="login" name="username" placeholder="Login" type="username" value="" class="form-control">                                        
+                    </div>
+
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                        <input id="password" type="password" class="form-control" name="password" value="" placeholder="Password">                                        
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Login</button>
+
+                    {% if error %}
+                      <p class="login-error">Вы ввели неправильную почту или пароль.</p>
+                    {% endif %}
+          
+                  {% else %}
+
+                  <div class="input-group">
+                     Вы авторизованы как: {{ user.get_username }}
+                              <!-- <a href="/logout">Logout</a> -->
+                              <a href="/logout" class="btn btn-primary">Logout</a>
+                  </div>
+                <!-- <button type="submit" class="btn btn-primary"><a href="/logout">Logout</a></button> -->
+
+               {% endif %}
+
+               <!-- <ul class="menu-main">
+                  <li><a href="/open_now/">Open now</a></li>
+                  <li><a href="/scorecard_monitoring/">Scorecard monitoring</a></li>
+                  <li><a href="/vintages/">Vintages</a></li>
+                  <li><a href="/scorecard_gantt/">Gantt</a></li>
+                  <li><a href="/financed_sankey/">Financed sankey</a></li>
+                  <li><a href="/gini_badrate/">Gini's by badrate</a></li>
+                  <li><a href="/graph_contacts/">Contacts graph</a></li>
+                  <li><a href="/one_scorecard_counts/">Scorecard counts</a></li>
+                  <li><a href="/month/">Scorecards last month</a></li>                                     
+              </ul> -->
+
+              </form>
+
+
+
+
+              
+             
+            </div>
+          </div>
+        </nav>
+                
+                </div>
+
+        </header>
+
+
+        <main>
+
+          <!-- <div id="login">
+              <form id="login-form" action="/login" method="post">
+                  {% csrf_token %}
+                  <div class="login-inputs">
+                      <input name="username" placeholder="Login" type="username" value="">
+                      <input name="password" placeholder="Password" type="password">
+                  </div>
+                  <input type="submit">
+                  {% if error %}
+                    <p class="login-error">Вы ввели неправильную почту или пароль.</p>
+                  {% endif %}
+              </form>
+            </div> -->
+
+          {% if user.is_authenticated %}
+
+          {% else %}
+
+          {% endif %}
+
+
+            {% block content %} 
+
+            {% endblock %}
+  
+
+        </main>
+
+        <footer></footer>
+
+    </body>
+</html>
+

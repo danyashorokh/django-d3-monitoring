@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+  <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+  <script src="d3-timelines.js"></script>
+
+  <style type="text/css">
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: black;
+      shape-rendering: crispEdges;
+    }
+
+    .axis text {
+      font-family: sans-serif;
+      font-size: 10px;
+    }
+
+    .timeline-label {
+      font-family: sans-serif;
+      font-size: 12px;
+    }
+
+    #timeline2 .axis {
+      transform: translate(0px,40px);
+      -ms-transform: translate(0px,40px); /* IE 9 */
+      -webkit-transform: translate(0px,40px); /* Safari and Chrome */
+      -o-transform: translate(0px,40px); /* Opera */
+      -moz-transform: translate(0px,40px); /* Firefox */
+    }
+
+    .coloredDiv {
+      height:20px; width:20px; float:left;
+    }
+  </style>
+  <script type="text/javascript">
+    window.onload = function() {
+      var testData = [
+        {times: [{"starting_time": 1355752800000, "ending_time": 1355759900000}, {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
+        {times: [{"starting_time": 1355759910000, "ending_time": 1355761900000}, ]},
+        {times: [{"starting_time": 1355761910000, "ending_time": 1355763910000}]}
+
+      ];
+
+      var json1 = [
+        {label: "person a", times: [{"color":"green", "label":"Weeee", "starting_time": 1355752800000, "ending_time": 1355759900000}, {"color":"blue", "label":"Weeee", "starting_time": 1355767900000, "ending_time": 1355774400000}]},
+        {label: "person b", times: [{"color":"pink", "label":"Weeee", "starting_time": 1355759910000, "ending_time": 1355761900000}, ]},
+        {label: "person c", times: [{"color":"yellow", "label":"Weeee", "starting_time": 1355761910000, "ending_time": 1355763910000}]}
+      ];
+
+       var json = [
+        {label: "person a", times: [{"color":"green", "label":"Weeee", "starting_time": 135752800000, "ending_time": 1355759900000}, {"color":"blue", "label":"Weeee", "starting_time": 1355767900000, "ending_time": 1355774400000}]},
+        {label: "person b", times: [{"color":"pink", "label":"Weeee", "starting_time": 1355759910000, "ending_time": 1355761900000}, ]},
+        {label: "person c", times: [{"color":"yellow", "label":"Weeee", "starting_time": 1355761910000, "ending_time": 1355763910000}]}
+      ];
+
+
+
+      var width = 500;
+      
+     
+
+
+      function timelineLabelColor() {
+        var chart = d3.timelines()
+          //.beginning(1355752800000) // we can optionally add beginning and ending times to speed up rendering a little
+          .ending(1355774400000)
+          .stack() // toggles graph stacking
+          .margin({left:70, right:30, top:0, bottom:0})
+          .rotateTicks(45);
+          ;
+        var svg = d3.select("#timeline6").append("svg").attr("width", width)
+          .datum(json).call(chart);
+      }
+
+      function timelineRotatedTicks() {
+        var chart = d3.timelines()
+          .rotateTicks(45);
+
+        var svg = d3.select("#timeline7").append("svg").attr("width", width)
+          .datum(testData).call(chart);
+      }
+
+
+      timelineLabelColor();
+      timelineRotatedTicks();
+
+    }
+
+  </script>
+</head>
+
+
+<body>
+
+  <div>
+    <h3>We can change colors and put labels</h3>
+    <div id="timeline6"></div>
+  </div>
+
+  <div>
+    <h3>We can also rotate tick mark labels</h3>
+    <div id="timeline7"></div>
+  </div>
+
+</body>
+</html>

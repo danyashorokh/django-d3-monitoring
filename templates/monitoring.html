@@ -1,0 +1,74 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+    <style type="text/css">
+        
+
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        table {
+            /*border-collapse: collapse;*/
+        }
+        
+    </style>
+
+
+
+
+<div class="wrap">
+
+    <div>
+
+    <p>Last 10 actions</p>
+    <table class='table'>
+        <tr>
+
+            <th>user</th>
+            <th>url</th>
+            <th>event_date</th>
+            <th>computer_name</th>
+            <th>groups</th>
+
+        </tr>
+            
+            {% for a in last_actions %}
+                <tr>
+                    <td>{{ a.user }}</td> 
+                    <td>{{ a.url }}</td> 
+                    <td>{{ a.event_date }}</td> 
+                    <td>{{ a.server_name }}</td> 
+                    <td>{{ a.groups }}</td>
+                </tr>
+            {% endfor %}
+    </table>
+
+    </div>
+
+    <div>
+
+    <p>Pages actions</p>
+    <table class='table'>
+        <tr>
+
+            <th>url</th>
+            <th>count</th>
+
+        </tr>
+            
+        {% for a in page_counts %}
+            <tr>
+                <td>{{ a.url }}</td> 
+                <td>{{ a.count }}</td> 
+            </tr>
+        {% endfor %}
+    </table>
+
+    </div>
+
+</div>
+
+
+
+{% endblock %}

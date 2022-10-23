@@ -1,0 +1,372 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+<title>Sankey</title>
+<style>
+
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+  /*border-radius: 10px;*/
+}
+
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.link {
+  fill: none;
+  /*stroke: darkblue;*/
+  stroke-opacity: .2;
+}
+
+.link:hover {
+  stroke-opacity: .5;
+}
+
+
+
+</style>
+
+
+<!-- DATA EXAMPLE
+
+{"nodes": [
+  {"name": "Новый", "node": 0}, 
+  {"name": "Повторный", "node": 1}, 
+  {"name": "Core", "node": 2}, 
+  {"name": "Digital", "node": 3}, 
+  {"name": "MigOne", "node": 4}, 
+  {"name": "POS", "node": 5}, 
+  {"name": "MainScore_201609_RepeatClients", "node": 6}, 
+  {"name": "MainScore_201709_Core_New_EquifaxHit", "node": 7},
+  {"name": "cr_no_upsale_0318", "node": 8}, 
+  {"name": "cr_upsale_0318", "node": 9}, 
+  {"name": "dn_cl_eq_1217", "node": 10}, 
+  {"name": "dn_pd_eq_1217", "node": 11}, 
+  {"name": "dr_clpd_0318", "node": 12}, 
+  {"name": "dr_upsale_0518", "node": 13}, 
+  {"name": "pos_n_nbch_0318", "node": 14}, 
+  {"name": "A", "node": 15}, 
+  {"name": "B", "node": 16}, 
+  {"name": "C", "node": 17}
+
+  ], 
+
+  "links": [
+   {"value": 218, "target": 2, "source": 0}, 
+   {"value": 60, "target": 3, "source": 0}, 
+   {"value": 7, "target": 4, "source": 0}, 
+   {"value": 3, "target": 5, "source": 0}, 
+   {"value": 154, "target": 2, "source": 1}, 
+   {"value": 85, "target": 3, "source": 1}, 
+   {"value": 5, "target": 4, "source": 1}, 
+   {"value": 72, "target": 6, "source": 2}, {"value": 218, "target": 7, "source": 2}, {"value": 66, "target": 8, "source": 2}, {"value": 16, "target": 9, "source": 2}, {"value": 50, "target": 6, "source": 3}, {"value": 60, "target": 10, "source": 3}, {"value": 12, "target": 12, "source": 3}, {"value": 23, "target": 13, "source": 3}, {"value": 5, "target": 6, "source": 4}, {"value": 7, "target": 11, "source": 4}, {"value": 3, "target": 14, "source": 5}, {"value": 44, "target": 15, "source": 6}, {"value": 52, "target": 16, "source": 6}, {"value": 31, "target": 17, "source": 6}, {"value": 180, "target": 15, "source": 7}, {"value": 38, "target": 16, "source": 7}, {"value": 35, "target": 15, "source": 8}, {"value": 31, "target": 16, "source": 8}, {"value": 6, "target": 16, "source": 9}, {"value": 10, "target": 17, "source": 9}, {"value": 57, "target": 15, "source": 10}, {"value": 3, "target": 17, "source": 10}, {"value": 7, "target": 15, "source": 11}, {"value": 3, "target": 15, "source": 12}, {"value": 9, "target": 16, "source": 12}, {"value": 3, "target": 16, "source": 13}, {"value": 20, "target": 17, "source": 13}, {"value": 3, "target": 15, "source": 14}
+
+   ]}
+ -->
+
+<!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/sankey042.js' %}"></script>
+
+<!-- <script src="https://unpkg.com/d3-sankey@0"></script> -->
+
+<!-- <form method="post" action="/financed_sankey/">
+    {% csrf_token %}
+    
+    Choose week from
+    <select name='week_from'>
+    {% for week in week_options %}
+      {% if week1 == week %}
+        <option selected value='{{ week }}'>{{ week }}</option>
+      {% else %}
+        <option value='{{ week }}'>{{ week }}</option>
+      {% endif %}
+    {% endfor %}
+    </select>
+    
+    Choose week upto
+    <select name='week_upto'>
+    {% for week in week_options %}
+      {% if week2 == week %}
+        <option selected value='{{ week }}'>{{ week }}</option>
+      {% else %}
+        <option value='{{ week }}'>{{ week }}</option>
+      {% endif %}
+    {% endfor %}
+    </select>
+    
+    <input type="submit" value="Submit">
+</form>
+ -->
+
+<!--   <button class="btn btn-success" id="save_as_pdf" value="">
+    Save as PDF
+  </button>
+ -->
+
+<script>
+
+var units = "Applications";
+
+// set the dimensions and margins of the graph
+var margin = {top: 50, right: 300, bottom: 50, left: 10},
+    width = 1800 - margin.left - margin.right,
+    height = 900 - margin.top - margin.bottom;
+
+// format variables
+var formatNumber = d3.format(",.0f");    // zero decimal places
+var format_count = function(d) { return formatNumber(d) + " " + units; };
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+// append the svg object to the body of the page
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// Set the sankey diagram properties
+var sankey = d3.sankey()
+    .nodeWidth(36)
+    .nodePadding(120)
+    .size([width, height])
+    .align('center')
+    ;
+
+
+var data = JSON.parse('{{ json | escapejs }}');
+
+data.nodes.forEach(function(d) {
+    d.name = d.name;
+    d.x1 = +d.x1;
+});
+
+
+sankey
+  .nodes(data.nodes)
+  .links(data.links)
+  .layout(256);
+
+var path = sankey.link();
+
+// add in the links
+  var link = svg.append("g").selectAll(".link")
+      .data(data.links)
+    .enter().append("path")
+      .attr("class", "link")
+      .attr("d", path)
+      .style('stroke', function(d) { 
+        if (d.financed > 0) { 
+          return 'green'; // financed = 1
+        } else  return 'darkblue';})
+      .style("stroke-width", function(d) { return Math.max(3, d.dy); })
+      .sort(function(a, b) { return b.dy - a.dy; });
+
+// add the link titles
+link.append("title")
+        .text(function(d) {
+    		return d.source.name + " → " + 
+                d.target.name + "\n" + format_count(d.value); });
+
+// add in the nodes
+  var node = svg.append("g").selectAll(".node")
+      .data(data.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d) { 
+		  return "translate(" + d.x + "," + d.y + ")"; })
+      .call(d3.drag()
+        .subject(function(d) {
+          return d;
+        })
+        .on("start", function() {
+          this.parentNode.appendChild(this);
+        })
+        .on("drag", dragmove))
+      // .call(function () {
+      //   manualLayout1();
+      // })
+      ;
+
+// add the rectangles for the nodes
+  node.append("rect")
+      .attr('class', 'node-rect')
+      .attr("height", function(d) { return d.dy; })
+      .attr("width", sankey.nodeWidth())
+      .style("fill", function(d) { 
+		  return d.color = color(d.name.replace(/ .*/, "")); })
+      .style("stroke", function(d) { 
+		  return d3.rgb(d.color).darker(2); })
+    .append("title")
+      .text(function(d) { 
+		  return d.name + "\n" + format_count(d.value); })
+      ;
+
+// add in the title for the nodes
+  node.append('text')
+      .attr("class", "node-text")
+      .attr("x", 45)
+      .attr("y", function(d) { return d.dy / 2; })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "start")
+      .attr("transform", null)
+      .text(function(d) { return d.name; })
+      .call(wrap, 150)
+    // .filter(function(d) { return d.x < width / 2; })
+    //   // .attr("x", 6 + sankey.nodeWidth())
+    //   .attr("x", -200)
+    //   .attr("text-anchor", "start");
+
+
+  node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("transform", function (d) {
+        var offset_y = 0;
+        if (d.name.length > (d.dy - 20)) {
+          offset_y = d.dy/2 + 20
+        }
+        return "rotate(270) translate(" +
+                       (-d.dy / 2 + offset_y) +
+                       ", " +
+                       (sankey.nodeWidth() / 2 + 5) +
+       ")";})
+      .text(function(d) { return d.value; })
+      ;
+
+// the function for moving the nodes
+  function dragmove(d) {
+    d3.select(this)
+      .attr("transform", 
+            "translate(" 
+               + (d.x = Math.max(
+                  0, Math.min(width - d.dx, d3.event.x))
+                 ) + "," 
+               + (d.y = Math.max(
+                  0, Math.min(height - d.dy, d3.event.y))
+                 ) + ")");
+    sankey.relayout();
+    link.attr("d", path);
+  }
+
+
+  function wrap(text, width) {
+    text.each(function () {
+        var text = d3.select(this),
+            words = text.text().split(/\s+/).reverse(),
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1.1, // ems
+            x = text.attr("x"),
+            y = text.attr("y"),
+            dy = 0, //parseFloat(text.attr("dy")),
+            // dy = parseFloat(text.attr("dy")),
+            tspan = text.text(null)
+                        .append("tspan")
+                        .attr("x", x)
+                        .attr("y", y)
+                        .attr("dy", dy + "em");
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(" "));
+            if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = [word];
+                tspan = text.append("tspan")
+                            .attr("x", x)
+                            .attr("y", y)
+                            .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                            .text(word);
+            }
+        }
+    });
+  }
+
+  // manually customize node position
+  function manualLayout() {
+    //http://stackoverflow.com/questions/10337640/how-to-access-the-dom-element-that-correlates-to-a-d3-svg-object
+    //displacements in order of foo nodes (foo[0][j])
+
+
+    var displacements = [50, 50, 400, 50, 200, 300, 400, 500, 50, 200, 50, 200, 150, 250, 350, 450];
+    var foo = d3.selectAll("g.node");
+
+
+    for (j=0; j < displacements.length; j++) {
+      pickNode = foo[j]; //equals "this" in d3.behavior.drag()...on("dragstart")
+      d = data.nodes[j];
+
+      d3.select(pickNode).attr("transform", 
+            "translate(" + (
+                   d.x = d.x
+          ) + "," + (
+                   d.y = displacements[j] //Math.max(0, Math.min(height - d.dy, d3.event.y))
+            ) + ")");
+   
+    }
+    sankey.relayout();
+    link.attr("d", path);
+  }
+
+  function manualLayout1() {
+      svg.selectAll(".node")
+        .attr("transform", function(d) { 
+        return "translate(" + d.x1 + "," + d.y + ")"; })
+      sankey.relayout();
+      path = sankey.link();
+      link = svg.selectAll(".link")
+      link.attr("d", path);
+  }
+  
+</script>
+
+
+
+
+<!-- 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap-combined.min.css" rel="stylesheet">
+<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/188.0.0/prettify.js"></script>
+
+<script type="text/javascript" src="{% static 'js/vkbeautify.0.99.00.beta.js' %}"></script>
+
+
+  <form id="svgform" method="post" action="/download.pl">
+     {% csrf_token %}
+     <input type="hidden" id="output_format" name="output_format" value="">
+     <input type="hidden" id="data" name="data" value="">
+  </form>
+
+<script>
+
+  function submit_download_form(output_format)
+    {
+      // Get the d3js SVG element
+      // var tmp = document.getElementById("ex1");
+      var svg = document.getElementsByTagName("svg")[0];
+      console.log(svg);
+      // Extract the data as SVG text string
+      var svg_xml = (new XMLSerializer).serializeToString(svg);
+      console.log(svg_xml);
+      // Submit the <FORM> to the server.
+      // The result will be an attachment file to download.
+      var form = document.getElementById("svgform");
+      form['output_format'].value = output_format;
+      form['data'].value = svg_xml ;
+      form.submit();
+    }
+
+
+    $(document).ready(function() {
+      $("#save_as_pdf").click(function() { submit_download_form("pdf"); });
+    });
+
+</script>
+
+{% endblock %} -->

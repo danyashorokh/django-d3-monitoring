@@ -1,0 +1,1940 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+{% load user_tags %}
+
+<style>
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+.inner {
+    margin: auto;
+    /*margin-top: 30pt;*/
+    padding:10pt;
+    /*border:2px solid red;*/
+    border-radius:4pt;
+    width:80%;
+    height:450px;
+    display: block;
+    vertical-align: middle;
+}
+
+p {
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 40px;
+}
+
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+} 
+
+.axis--x path {
+  display: none;
+}
+
+.axis--y1 path {
+  display: none;
+}
+
+.axis-all-y1 path {
+  display: none;
+}
+
+
+.axis--y2 path {
+  display: none;
+}
+
+.axis-all-y2 path {
+  display: none;
+}
+
+/*g.chart3 > g.axis--y1 text{
+  fill: red;
+}
+*/
+.axis--y2 text{
+  fill: blue;
+}
+
+.axis-all-y2 text{
+  fill: blue;
+}
+
+.line {
+  fill: none;
+  stroke: blue;
+  stroke-width: 4px;
+}
+
+.ssi-line {
+  fill: none;
+  stroke: blue;
+  stroke-width: 4px;
+}
+
+path {
+  fill: none;
+}
+
+.overlay {
+      fill: none;
+      pointer-events: all;
+}
+
+.focus circle {
+  fill: #fff;
+  stroke: blue;
+  stroke-width: 3px;
+}
+
+div.linetooltip {
+  position: absolute;
+  text-align: center;
+/*  width: 100px;
+  height: 28px;*/
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 1px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.g-hed {
+        text-align: center;
+        text-transform: uppercase;
+        font-family: 'Snell';
+        font-weight: bold;
+        font-size:22px;
+        /*font-style: italic;*/
+        margin: 3px 0;
+        color: blue;
+}
+
+table.dataframe {
+  border-collapse: collapse;
+  font: 11px sans-serif;
+}
+
+table.dataframe > th, td {
+            padding: 3px;
+            text-align: left;
+            
+        }
+
+  [aria-hidden="true"] {
+    opacity: 0;
+    position: absolute;
+    z-index: -9999;
+    pointer-events: none;
+  }
+
+</style>
+
+
+{% if not request.user|has_group:"limits" or request.user|has_group:"risk" or request.user.is_superuser %}
+
+<script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery.chained.min.js' %}"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.4.0/clipboard.min.js"></script>
+
+
+<center>
+  <a>{{ scorecard.0 }} {{ scorecard.1 }} {{ scorecard.2 }}</a>
+
+
+<form method="get" action="/scorecard/scorecard_monitoring/" id="form">
+  
+  {# {% csrf_token %} #}
+
+  <!-- dropdown select -->
+  <label for="business_type">Business type</label>
+  <select id="business_type" name="business_type">
+    <!-- <option value="" selected="selected">---------</option> -->
+    {% for scorecard in scorecards_db_list %}
+      {% ifchanged %}
+          {% if cur_business_type == scorecard.0 %}   
+            <option value="{{ scorecard.0 }}" selected>{{ scorecard.0 }}</option>
+          {% else %}
+            <option value="{{ scorecard.0 }}">{{ scorecard.0 }}</option>
+          {% endif %}
+      {% endifchanged %}    
+    {% endfor %}
+  </select>
+  
+  <label for="client_type">Client type</label>
+  <select id="client_type" name="client_type">
+    <!-- <option value="" selected="selected">---------</option> -->
+    {% for scorecard in scorecards_db_list %}
+      {% ifchanged %}
+        {% if cur_client_type == scorecard.1 %}
+          <option value="{{ scorecard.0 }}_{{ scorecard.1 }}" class="{{ scorecard.0 }}" selected>{{ scorecard.1 }}</option>
+        {% else %}
+           <option value="{{ scorecard.0 }}_{{ scorecard.1 }}" class="{{ scorecard.0 }}">{{ scorecard.1 }}</option>
+        {% endif %}
+      {% endifchanged %}    
+    {% endfor %}
+  </select>
+
+  <label for="scorecard">Scorecard</label>
+  <select id="scorecard" name="scorecard">
+    <!-- <option value="" selected="selected">---------</option> -->
+    {% for scorecard in scorecards_db_list %}
+      {% ifchanged %}
+        {% if cur_scorecard == scorecard.2 %}
+          <option value="{{ scorecard.2 }}" class="{{ scorecard.0 }}_{{ scorecard.1 }}" selected>{{ scorecard.2 }}</option>
+        {% else %}
+          <option value="{{ scorecard.2 }}" class="{{ scorecard.0 }}_{{ scorecard.1 }}">{{ scorecard.2 }}</option>
+        {% endif %}
+      {% endifchanged %}    
+    {% endfor %}
+
+  </select>
+  <input type="submit" value="Submit">
+
+<!--   {% for sc in scorecards_db_list %}
+
+    bt: {{sc.0}}, ct: {{sc.1}}, name: {{sc.2}}
+
+  {% endfor %} -->
+
+</form>
+</center>
+
+<script>
+  
+  $("#client_type").chained("#business_type");
+  $("#scorecard").chained("#client_type");
+
+  $('select#business_type').val('{{ cur_business_type }}').change();
+  $('select#client_type').val('{{ cur_business_type }}_{{ cur_client_type }}').change();
+  $('select#scorecard').val('{{ cur_scorecard }}').change();
+
+  // function sleep(milliseconds) {
+  //   var start = new Date().getTime();
+  //   for (var i = 0; i < 1e7; i++) {
+  //     if ((new Date().getTime() - start) > milliseconds){
+  //       break;
+  //     }
+  //   }
+  // }
+
+  // for clipboard.js
+  (function(){
+      new Clipboard('#chart1-select');
+  })();
+
+
+  
+</script>
+
+<!-- <script type="text/javascript">
+  
+  // make action for form
+  document.getElementById("form").action = "";
+  
+  var i_bt = document.getElementById("business_type").selectedIndex;
+  var action_bt = document.getElementById("business_type")[i_bt].value;
+
+  var i_ct = document.getElementById("client_type").selectedIndex;
+  var action_ct = document.getElementById("client_type")[i_ct].value.split("_")[1];
+
+  var i_sc = document.getElementById("scorecard").selectedIndex;
+  var action_sc = document.getElementById("scorecard")[i_sc].value;
+
+  console.log(action_bt, action_ct, action_sc, document.getElementById("form").action);
+  
+  // if (document.getElementById("form").action == "") {
+
+    // document.getElementById("form").action = "/scorecard/scorecard_monitoring/" + action_bt + "/" + action_ct + "/" + action_sc + "/";
+    // document.getElementById("form").submit();
+
+  // }
+
+
+  console.log(document.getElementById("form").action);
+</script> -->
+
+
+<!-- charts -->
+<div class="outer">
+    <h3 class="g-hed"></h3>
+
+    <!-- <textarea id="request-db-gini" style='' aria-hidden="false">{{ requests_out }}</textarea> -->
+    <!-- Copy button -->
+ <!--    <button id="chart1-select" data-clipboard-target="#request-db-gini">
+        Copy request for gini
+    </button>
+ -->
+
+     <div class="inner">
+        <svg id="chart1" width="1000" height="500"></svg>
+    </div>
+
+     <div class="inner">
+        <form>
+          <label><input type="radio" name="mode" value="bypercent" checked>Percent</label>
+          <label><input type="radio" name="mode" value="bycount">Number of Applications</label>
+        </form>
+        <svg id="chart2" width="960" height="500"></svg>
+    </div>
+
+    <div class="inner">
+        <svg id="chart3" width="960" height="500"></svg>
+    </div>
+
+    <div class="inner">    
+        <svg id="chart4" width="960" height="500"></svg>
+    </div>
+
+    <div class="inner">
+       <!-- <center>{{ scorecard_variables|safe }}</center>     -->
+        <center>
+              {% for date, table in scorecard_variables.items %}
+                <div class='variables' id=date>
+                  <p>{{ date }}</p>
+                  {{ table|safe }}
+                </div>
+              {% endfor %}
+        </center>
+        <svg id="chart5" width="960" height="500"></svg>
+    </div>
+</div>
+
+
+
+
+<script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+
+<script>
+
+// date formatting
+var parseDate = d3.timeParse("%Y-%m");
+
+// get data
+var keys = ["D", "C", "B", "A"];
+var data_f = JSON.parse('{{ json_data_f | escapejs }}');
+var gini = JSON.parse('{{ json_gini | escapejs }}');
+var data_all = JSON.parse('{{ json_data_all | escapejs }}');
+var scores = JSON.parse('{{ json_scores | escapejs }}');
+
+var mean_scores = JSON.parse('{{ json_mean_scores | escapejs }}');
+var mean_indicators = JSON.parse('{{ json_mean_indicators | escapejs }}');
+var date_base = d3.min(scores, function(d) { return d.date; });
+
+var scores_share = JSON.parse('{{ json_scores_share | escapejs }}');
+
+//format the data
+data_f.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+gini.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+data_all.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+scores.forEach(function(d) {
+    d.date = parseDate(d.date);
+});
+
+mean_scores.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.score_mean = +d.score_mean
+});
+
+mean_indicators.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.value = +d.value;
+    d.label = d.label;
+});
+
+scores_share.forEach(function(d) {
+    d.key = d.key;
+    d.score = +d.score
+    d.share = +d.share
+});
+
+
+console.log('keys\n', keys);
+console.log('financed data\n', data_f);
+console.log('gini\n', gini);
+console.log('all data\n', data_all);
+console.log('score stability index\n', scores);
+console.log('mean_scores\n', mean_scores);
+console.log('mean_indicators\n', mean_indicators);
+console.log('date_base\n', date_base);
+console.log('scores_share\n', scores_share);
+
+//------------------------  CHART 1  -----------------------
+
+//Appends chart headline
+d3.select(".g-hed").text('{{ cur_business_type }} {{ cur_client_type }} {{ cur_scorecard }}');
+
+// create the svg 1
+var svg = d3.select("#chart1");
+var margin = {top: 40, right: 70, bottom: 150, left: 50};
+var width = +svg.attr("width") - margin.left - margin.right;
+var height = +svg.attr("height") - margin.top - margin.bottom;
+
+var g1 = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart1");
+
+// set x scale
+var xScale = d3.scaleBand()
+    .rangeRound([0, width])
+    .paddingInner(0.05)
+    // .align(0.1)
+    ;
+
+// set y scale
+var yScale1 = d3.scaleLinear()
+    .rangeRound([height, 0]);
+var yScale2 = d3.scaleLinear()
+    .rangeRound([height, 0]);
+
+// set the colors
+var color = d3.scaleOrdinal()
+    .range(["#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+// var color = d3.scaleOrdinal()
+//     .range(["#8a89a6", "#6b486b", "#a05d56", "#ff8c00"]);
+
+// axis
+var xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxis1 =  d3.axisLeft(yScale1);
+var yAxis2 =  d3.axisRight(yScale2);
+
+// define stack
+var stack = d3.stack()
+    .keys(keys)
+    // .order(d3.stackOrderNone)
+    .offset(d3.stackOffsetNone);
+
+var layers = stack(data_f);
+
+// console.log('stack(data_f)\n', stack(data_f));
+
+// define line
+var valueline1 = d3.line()
+    .x(function(d) { return xScale(d.date) + xScale.bandwidth()/2; })
+    .y(function(d) { return yScale2(d.value); });
+
+
+// data_f.sort(function(a, b) { return b.total - a.total; });
+data_f.sort(function(a, b) { return a.date - b.date; });
+  
+// var a = data_f.map(function(d) { return d.date; });
+// var b = gini.map(function(d) { return d.date; });
+// all_dates = Array.from(new Set(a.concat(b)))
+// all_dates = merge_array(a, b);
+// console.log(a);
+// console.log(b);
+// console.log(all_dates);
+// console.log(d3.min(all_dates));
+// console.log(d3.max(all_dates));
+// xScale.domain(d3.min(all_dates), d3.max(all_dates));
+// xScale.domain(all_dates);
+// console.log(data_all.map(function(d) { return d.date; }));
+
+xScale.domain(data_f.map(function(d) { return d.date; }));
+
+yScale1.domain([0, d3.max(layers[layers.length - 1], function(d) { return d[0] + d[1]; }) ]).nice();
+
+// yScale2.domain([d3.min(gini, function(d) { return d.value; }) / 1.005, 
+//         d3.max(gini, function(d) { return d.value; }) * 1.005]);
+
+yScale2.domain([0, 80]);
+
+
+color.domain(keys);
+
+g1.append("g")
+    .selectAll("g")
+    .data(layers)
+    // .data(d3.stack().keys(keys)(data))
+    .enter().append("g")
+        .attr("class", function(d) { return d.key; })
+        .attr("fill", function(d) { return color(d.key); })
+    .selectAll("rect")
+    .data(function(d) { return d; })
+    .enter().append("rect")
+        .attr("x", function(d) { return xScale(d.data.date); })
+        .attr("y", function(d) { return yScale1(d[1]); })
+      //   .transition()
+      // .duration(600)
+        .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+        .attr("width", xScale.bandwidth())       
+        
+
+    .on("mouseover", function() { 
+        tooltip1.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip1.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+      // console.log(d);
+        var xPosition = d3.mouse(this)[0] + 10;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        var elements = document.querySelectorAll(':hover');
+        l = elements.length;
+        l = l-2; // element g has class name by risk group
+        element = elements[l].__data__
+
+        tooltip1.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip1.select("text")
+          .text(element.key + ': ' + (d[1]-d[0]));
+
+    });
+
+// add axis
+g1.append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis)
+    .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+
+g1.append("g")
+    .attr("class", "axis axis--y1")
+    .call(yAxis1.ticks(null, "s"))
+    .append("text")
+        // .attr("x", 2)
+        // .attr("y", yScale1(yScale1.ticks().pop()) + 0.5)
+        // .attr("dy", "0.32em")
+        // .attr("fill", "#000")
+        // .attr("font-weight", "bold")
+        // .attr("text-anchor", "start")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -45)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Financed count"); // y axis label
+
+g1.append("g")
+    .attr("class", "axis axis--y2")
+    .call(yAxis2)
+    .attr("transform", "translate( " + width + ", 0 )")
+    .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 30)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Gini"); // y axis label
+
+// chart title
+g1.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")  
+    .style("font-size", "20px") 
+    // .style("text-decoration", "underline") 
+    .attr("fill", 'blue') 
+    .text("Gini");
+
+// add line
+g1.append("path")
+    .datum(gini)
+    .attr("class", "line")
+    .attr("d", valueline1)
+    // .on("mouseover", function() { focusline.style("display", null); })
+    // .on("mouseout", function() { focusline.style("display", "none"); })
+    // .on("mousemove", mousemove)
+    ;
+
+// line tips
+var linetooltip = d3.select("body").append("div")
+    .attr("class", "linetooltip")
+    .style("opacity", 0);
+
+// var formatTime = d3.timeFormat("%e %B");
+var formatTime = d3.timeFormat("%B %Y");
+
+// add the dots with tooltips
+g1.selectAll("dot")
+     .data(gini)
+   .enter().append("circle")
+     .attr("r", 7)
+     .attr('fill', 'blue')
+     .attr("cx", function(d) { return xScale(d.date) + xScale.bandwidth()/2; })
+     .attr("cy", function(d) { return yScale2(d.value); })
+     .on("mouseover", function(d) {
+       
+       linetooltip.transition()
+         .duration(200)
+         .style("opacity", .9);
+
+       linetooltip.html(formatTime(d.date) + "<br/>gini: " + d.value)
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 28) + "px")
+         .style("height", "28px")
+         .style("width", "100px");
+
+       })
+     .on("mouseout", function(d) {
+       linetooltip.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+
+// legend
+var legend = g1.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "end")
+    .selectAll("g")
+    .data(keys.slice().reverse())
+    .enter().append("g")
+        // .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+        .attr("transform", function(d, i) { return "translate(" + i * 23 + ", 0)"; });
+
+legend.append("rect")
+    // .attr("x", 29)
+    .attr("x", 3)
+    .attr("y", height + 50)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color);
+
+legend.append("text")
+    // .attr("x", 64)
+    .attr("x", 16)
+    // .attr("y", height + 30 + 9.5)
+    .attr("y", height + 70 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for gini
+g1.append("line")
+    .attr("x1", width - 35)
+    .attr("x2", width)
+    .attr("y1", height + 55)
+    .attr("y2", height + 55)
+    .style("stroke-width", 5)
+    .style("stroke", 'blue');
+
+g1.append("text")
+    .attr("x", width - 44)
+    .attr("y", height + 45)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Gini");
+
+
+// tooltip bits, initial display is hidden
+var tooltip1 = svg.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip1.append("rect")
+    .attr("width", 60)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.5);
+
+tooltip1.append("text")
+    .attr("x", 30)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+// focus on line
+var focusline = g1.append("g")
+    .attr("class", "focus")
+    .style("display", "none");
+
+focusline.append("circle")
+    .attr("r", 5);
+
+focusline.append("text")
+    .attr("x", 15)
+    .attr("dy", ".31em");
+
+// // mouse detection area
+// svg.append("rect")
+//   .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+//   .attr("class", "overlay")
+//   .attr("width", width)
+//   .attr("height", height)
+//   .on("mouseover", function() { focusline.style("display", null); })
+//   .on("mouseout", function() { focusline.style("display", "none"); })
+//   .on("mousemove", mousemove);
+
+
+//-------------------------------------- CHART 2 -----------------------------
+
+// create the svg 1
+var svg = d3.select("#chart2");
+var margin = {top: 40, right: 50, bottom: 150, left: 40};
+var width = +svg.attr("width") - margin.left - margin.right;
+var height = +svg.attr("height") - margin.top - margin.bottom;
+
+var g2 = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart2");
+
+var t = d3.transition().duration(250);
+var formatFloat = d3.format(".3f");
+var formatTime = d3.timeFormat("%B %Y");
+
+// set x scale
+var xScale = d3.scaleBand()
+    .rangeRound([0, width])
+    .paddingInner(0.05)
+    // .align(0.1);
+
+// set y scale
+var yScale1 = d3.scaleLinear()
+    .rangeRound([height, 0]);
+var yScale2 = d3.scaleLinear()
+    .rangeRound([height, 0]);
+
+// set the colors
+var color = d3.scaleOrdinal()
+    .range(["#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+// var color = d3.scaleOrdinal()
+//     .range(["#8a89a6", "#6b486b", "#a05d56", "#ff8c00"]);
+
+// axis
+var xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m")); //%b
+var yAxis1 =  d3.axisLeft(yScale1);
+var yAxis2 =  d3.axisRight(yScale2).tickFormat(formatFloat);  
+
+// define stack
+// offset(d3.stackOffsetExpand) - normalized
+// offset(d3.stackOffsetNone) - simple
+var stack = d3.stack()
+    .keys(keys)
+    // .order(d3.stackOrderNone)
+    .offset(d3.stackOffsetExpand);
+
+var layers = stack(data_all);
+
+// console.log('stack(data_all)\n', stack(data_all));
+
+// define line
+var valueline2 = d3.line()
+    .x(function(d) { return xScale(d.date) + xScale.bandwidth()/2; })
+    .y(function(d) { return yScale2(d.value); });
+
+
+// data_all.sort(function(a, b) { return b.total - a.total; });
+data_all.sort(function(a, b) { return a.date - b.date; });
+
+xScale.domain(data_all.map(function(d) { return d.date; }));
+
+// yScale1.domain([0, d3.max(layers[layers.length - 1], function(d) { return d[0] + d[1]; }) ]).nice(); // normalize
+
+// yScale2.domain([d3.min(scores, function(d) { return d.value; }) / 1.005, 
+//         d3.max(scores, function(d) { return d.value; }) * 1.005]);
+
+yScale2.domain([0, 1]);
+  
+color.domain(keys);
+
+g2.append("g")
+    .selectAll("g")
+    .data(layers)
+    // .data(d3.stack().keys(keys)(data))
+    .enter().append("g")
+        .attr("fill", function(d) { return color(d.key); })
+    .selectAll("rect")
+    .data(function(d) { return d; })
+    .enter().append("rect")
+        .attr("x", function(d) { return xScale(d.data.date); })
+        .attr("y", function(d) { return yScale1(d[1]); })
+        .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+        .attr("width", xScale.bandwidth())
+        .attr("class", 'rect-transition')
+
+    .on("mouseover", function() { 
+        tooltip2.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip2.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+      // console.log(d);
+        var xPosition = d3.mouse(this)[0] + 10;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        var elements = document.querySelectorAll(':hover');
+        l = elements.length;
+        l = l-2; // element g has class name by risk group
+        element = elements[l].__data__
+
+        tooltip2.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip2.select("text").text(element.key + ': ' + (formatFloat(d[1]-d[0])));
+    });
+
+// add axis
+g2.append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis)
+    .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+
+g2.append("g")
+    .attr("class", "axis axis-all-y1")
+    .call(yAxis1.ticks(null, "s"))
+    .append("text")
+        // .attr("x", 2)
+        // .attr("y", yScale1(yScale1.ticks().pop()) + 0.5)
+        // .attr("dy", "0.32em")
+        // .attr("fill", "#000")
+        // .attr("font-weight", "bold")
+        // .attr("text-anchor", "start")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -40)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("All count %"); // y axis label
+
+g2.append("g")
+    .attr("class", "axis axis-all-y2")
+    .call(yAxis2)
+    .attr("transform", "translate( " + width + ", 0 )")
+    .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 40)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("Score stability index"); // y axis label
+
+// chart title
+g2.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")  
+    .style("font-size", "20px") 
+    // .style("text-decoration", "underline") 
+    .attr("fill", 'blue') 
+    .text("Score stability");
+
+// add line
+draw_ssi()
+
+// legend
+var legend = g2.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "end")
+    .selectAll("g")
+    .data(keys.slice().reverse())
+    .enter().append("g")
+        // .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+        .attr("transform", function(d, i) { return "translate(" + i * 23 + ", 0)"; });
+
+legend.append("rect")
+    // .attr("x", 29)
+    .attr("x", 3)
+    .attr("y", height + 50)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", color);
+
+legend.append("text")
+    // .attr("x", 64)
+    .attr("x", 16)
+    // .attr("y", height + 30 + 9.5)
+    .attr("y", height + 70 + 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) { return d; });
+
+// legend for ssi
+g2.append("line")
+    .attr("x1", width - 35)
+    .attr("x2", width)
+    .attr("y1", height + 55)
+    .attr("y2", height + 55)
+    .style("stroke-width", 5)
+    .style("stroke", 'blue');
+
+g2.append("text")
+    .attr("x", width - 44)
+    .attr("y", height + 45)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Score stability index");
+
+// tooltip bits, initial display is hidden
+var tooltip2 = svg.append("g")
+    .attr("class", "tooltip")
+    .style("display", "none");
+  
+tooltip2.append("rect")
+    .attr("width", 60)
+    .attr("height", 20)
+    .attr("fill", "white")
+    .style("opacity", 0.5);
+
+tooltip2.append("text")
+    .attr("x", 30)
+    .attr("dy", "1.2em")
+    .style("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("font-weight", "bold");
+
+// focus on line
+var focusline = g2.append("g")
+    .attr("class", "focus")
+    .style("display", "none");
+
+focusline.append("circle")
+    .attr("r", 5);
+
+focusline.append("text")
+    .attr("x", 15)
+    .attr("dy", ".31em");
+
+
+// animation
+d3.selectAll("input").on("change", handleFormClick);
+
+function handleFormClick() {
+  if (this.value === "bypercent") {
+    console.log('Percent');
+    transitionPercent();
+  } else {
+    console.log('Count');
+    transitionCount();
+  }
+}
+
+
+// transition to 'percent' presentation
+function transitionPercent() {
+
+  var stackPercent = d3.stack()
+    .keys(keys)
+    .offset(d3.stackOffsetExpand);
+
+  layers = stackPercent(data_all);
+
+  yScale1.domain([0, 1]);
+
+  d3.selectAll(".rect-transition").remove();
+
+  var color = d3.scaleOrdinal()
+    .range(["#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+  color.domain(keys);
+
+  g2.append("g")
+      .selectAll("g")
+      .data(layers)
+      .enter().append("g")
+          .attr("fill", function(d) { return color(d.key); })
+          .attr("class", 'rect-transition')
+          // .transition().duration(250)
+      .selectAll("rect")
+      .data(function(d) { return d; })
+      .enter().append("rect")
+          // .transition().duration(250)
+          .attr("x", function(d) { return xScale(d.data.date); })
+          .attr("y", function(d) { return yScale1(d[1]); })
+          .transition().duration(350)
+          .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+          .attr("width", xScale.bandwidth())
+
+
+      // .on("mouseover", function() { 
+      //   tooltip2.style("display", null); 
+      // })
+      // .on("mouseout", function() { 
+      //     tooltip2.style("display", "none");
+      // })
+      // .on("mousemove", function(d) {
+      //   // console.log(d);
+      //     var xPosition = d3.mouse(this)[0] + 10;
+      //     var yPosition = d3.mouse(this)[1] - 5;
+
+      //     var elements = document.querySelectorAll(':hover');
+      //     l = elements.length;
+      //     l = l-2; // element g has class name by risk group
+      //     element = elements[l].__data__
+
+      //     tooltip2.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+      //     tooltip2.select("text").text(element.key + ': ' + (formatFloat(d[1]-d[0])));
+      // });
+
+  // add focus tips on bars
+  g2.selectAll("rect")
+    .on("mouseover", function() { 
+        tooltip2.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip2.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+      // console.log(d);
+        var xPosition = d3.mouse(this)[0] + 10;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        var elements = document.querySelectorAll(':hover');
+        l = elements.length;
+        l = l-2; // element g has class name by risk group
+        element = elements[l].__data__
+
+        tooltip2.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip2.select("text")
+          .text(element.key + ': ' + (d[1]-d[0]));
+
+    });
+
+
+  // update axis
+  d3.selectAll(".axis-all-y1").remove();
+
+  g2.append("g")
+  .attr("class", "axis axis-all-y1")
+  .call(yAxis1.ticks(null, "s"))
+  .append("text")
+      .attr("class", "axis-title")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -40)
+      .attr("dy", ".9em")
+      .style("text-anchor", "end") // label align
+      .attr("fill", "#5D6971")
+      .text("All count %"); // y axis label
+
+  // add ssi line
+  draw_ssi()
+
+}
+  
+// transition to 'count' presentation
+function transitionCount() {
+
+
+  // offset(d3.stackOffsetExpand) - normalized
+  // offset(d3.stackOffsetNone) - simple
+
+  var stackCount = d3.stack()
+    .keys(keys)
+    // .order(d3.stackOrderNone)
+    .offset(d3.stackOffsetNone);
+
+  layersCount = stackCount(data_all);
+
+  yScale1.domain([0, d3.max(layersCount[layersCount.length - 1], function(d) { return (d[0] + d[1])/1.2; }) ]).nice(); // normalize
+
+  d3.selectAll(".rect-transition").remove();
+
+  var color = d3.scaleOrdinal()
+    .range(["#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+  color.domain(keys);
+
+  // // ----------- draw old ------------------
+  // g2.append("g")
+  //   .selectAll("g")
+  //   .data(layersCount)
+  //   .enter().append("g")
+  //       .attr("fill", function(d) { return color(d.key); })
+  //       .attr("class", 'rect-transition')
+  //   .selectAll("rect")
+  //   .data(function(d) { return d; })
+  //   .enter().append("rect")
+  //       .attr("x", function(d) { return xScale(d.data.date); })
+  //       .attr("y", function(d) { return yScale1(d[1]); })
+  //       .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+  //       .attr("width", xScale.bandwidth())
+  // // ----------- end draw old ------------------
+
+    // .on("mouseover", function() { 
+    //     tooltip2.style("display", null); 
+    // })
+    // .on("mouseout", function() { 
+    //     tooltip2.style("display", "none");
+    // })
+    // .on("mousemove", function(d) {
+    //   // console.log(d);
+    //     var xPosition = d3.mouse(this)[0] + 10;
+    //     var yPosition = d3.mouse(this)[1] - 5;
+
+    //     var elements = document.querySelectorAll(':hover');
+    //     l = elements.length;
+    //     l = l-2; // element g has class name by risk group
+    //     element = elements[l].__data__
+
+    //     tooltip2.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+    //     tooltip2.select("text")
+    //       .text(element.key + ': ' + (d[1]-d[0]));
+
+    // });
+
+  // ----------- draw new ------------------
+
+  g2.append("g")
+    .selectAll("g")
+    .data(layersCount)
+    .enter().append("g")
+        .attr("fill", function(d) { return color(d.key); })
+        .attr("class", 'rect-transition')
+    .selectAll("rect")
+    .data(function(d) { return d; })
+    .enter().append("rect")
+      .attr("width", xScale.bandwidth())
+      .attr("x", function(d) { return xScale(d.data.date); })  
+        .transition().duration(250)
+          // .attr("x", function(d) { return xScale(d.data.date); })
+          .attr("y", function(d, i) {
+
+
+              // console.log(g2.selectAll("rect").attr("fill", function(d) { return this.getBBox().y + this.getBBox().node().height }));
+
+
+                  // d3.selectAll(".rect-transition rect").each(function(d, i) {
+                  //   console.log(this, d, i);
+                  // });
+
+
+
+              // console.log(this.getBBox().height, yScale1(d[0]) - yScale1(d[1]));
+              // console.log(d[i], i);
+
+              // return this.getBBox().y + this.getBBox().height - (yScale1(d[0]) - yScale1(d[1])) 
+              return (yScale1(d[0]) - yScale1(d[1])) 
+              // return (yScale1(d[0]) - yScale1(d[1])) 
+
+          })
+          .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+        .transition().delay(350).duration(350).ease(d3.easeBounce)
+        //   .attr("x", function(d) { return xScale(d.data.date); })
+          .attr("y", function(d) { return yScale1(d[1]); })
+          // .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+          
+
+
+  // g2.append("g")
+  //   .selectAll("g")
+  //   .data(layersCount)
+  //   .enter().append("g")
+  //       .attr("fill", function(d) { return color(d.key); })
+  //       .attr("class", 'rect-transition')
+  //   .selectAll("rect")
+  //   .data(function(d) { return d; })
+  //   .enter().append("rect")
+  //       .attr("x", function(d) { return xScale(d.data.date); })
+  //       .attr("y", function(d) { return yScale1(d[1]); })
+  //       .attr("height", function(d) { return yScale1(d[0]) - yScale1(d[1]); })
+  //       .attr("width", xScale.bandwidth())
+  // ----------- end draw new ------------------
+
+
+  // add focus tips on bars
+  g2.selectAll("rect")
+    .on("mouseover", function() { 
+        tooltip2.style("display", null); 
+    })
+    .on("mouseout", function() { 
+        tooltip2.style("display", "none");
+    })
+    .on("mousemove", function(d) {
+      // console.log(d);
+        var xPosition = d3.mouse(this)[0] + 10;
+        var yPosition = d3.mouse(this)[1] - 5;
+
+        var elements = document.querySelectorAll(':hover');
+        l = elements.length;
+        l = l-2; // element g has class name by risk group
+        element = elements[l].__data__
+
+        tooltip2.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+        tooltip2.select("text")
+          .text(element.key + ': ' + (d[1]-d[0]));
+
+    });
+
+
+
+    // update axis
+    // yAxis1.tickFormat(d3.format(".2f"));
+    d3.selectAll(".axis-all-y1").remove();
+
+
+    g2.append("g")
+    .attr("class", "axis axis-all-y1")
+    .call(yAxis1.ticks(null, "s"))
+    .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -40)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "#5D6971")
+        .text("All count"); // y axis label
+
+
+    // add ssi line
+    draw_ssi()
+
+
+}
+
+
+function draw_ssi() {
+
+  // console.log('redraw ssi line')
+  
+  d3.selectAll(".ssi-line").remove();
+  d3.selectAll(".linetooltip").remove();
+
+  var valueline2 = d3.line()
+    .x(function(d) { return xScale(d.date) + xScale.bandwidth()/2; })
+    .y(function(d) { return yScale2(d.value); });
+
+  g2.append("path")
+    .datum(scores)
+    .attr("class", "ssi-line")
+    .attr("d", valueline2)
+    // .on("mouseover", function() { focusline.style("display", null); })
+    // .on("mouseout", function() { focusline.style("display", "none"); })
+    // .on("mousemove", mousemove)
+    ;
+
+// line tips
+var linetooltip2 = d3.select("body").append("div")
+    .attr("class", "linetooltip")
+    .style("opacity", 0);
+
+// add the dots with tooltips
+g2.selectAll("dot")
+     .data(scores)
+   .enter().append("circle")
+     .attr("r", 7)
+     .attr('fill', function(d, i) { 
+        if (i == 0) { return 'red';} 
+        else { return 'blue';}
+      })
+     .attr("cx", function(d) { return xScale(d.date) + xScale.bandwidth()/2; })
+     .attr("cy", function(d) { return yScale2(d.value); })
+     .on("mouseover", function(d, i) {
+       
+       linetooltip2.transition()
+         .duration(200)
+         .style("opacity", .9);
+
+        if (i > 0) {
+         linetooltip2.html(formatTime(d.date) + "<br/>ssi: " + d.value)
+           .style("left", (d3.event.pageX) + "px")
+           .style("top", (d3.event.pageY - 28) + "px")
+           .style("height", "28px")
+           .style("width", "100px");
+
+        } else {
+          linetooltip2.html(formatTime(d.date) + "<br/>First month stability working<br/>ssi: " + d.value)
+           .style("left", (d3.event.pageX) + "px")
+           .style("top", (d3.event.pageY - 28) + "px")
+           .style("height", "40px")
+           .style("width", "150px");
+
+        }
+
+       })
+     .on("mouseout", function(d) {
+       linetooltip2.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+}
+
+//-------------------------------------- CHART 3 -----------------------------
+
+// set the dimensions and margins of the graph
+var svg = d3.select("#chart3");
+var margin = {top: 40, right: 50, bottom: 150, left: 50};
+var width = +svg.attr("width") - margin.left - margin.right;
+var height = +svg.attr("height") - margin.top - margin.bottom;
+
+var g3 = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart3");
+
+// parse the date / time
+var parseTime = d3.timeParse("%Y-%m");
+var formatFloat = d3.format(".3f");
+
+// var color = d3.scaleOrdinal()
+//     .domain(mean_indicators)
+//     .range(["#3957ff", "#d3fe14", "#c9080a", "#fec7f8", "#0b7b3e", "#0bf0e9", "#c203c8", "#fd9b39", "#888593", "#906407", "#98ba7f", "#fe6794", "#10b0ff", "#ac7bff", "#fee7c0", "#964c63", "#1da49c", "#0ad811", "#bbd9fd", "#fe6cfe", "#297192", "#d1a09c", "#78579e", "#81ffad", "#739400", "#ca6949", "#d9bf01", "#646a58", "#d5097e", "#bb73a9", "#ccf6e9", "#9cb4b6", "#b6a7d4", "#9e8c62", "#6e83c8", "#01af64", "#a71afd", "#cfe589", "#d4ccd1", "#fd4109", "#bf8f0e", "#2f786e", "#4ed1a5", "#d8bb7d", "#a54509", "#6a9276", "#a4777a", "#fc12c9", "#606f15", "#3cc4d9", "#f31c4e", "#73616f", "#f097c6", "#fc8772", "#92a6fe", "#875b44", "#699ab3", "#94bc19", "#7d5bf0", "#d24dfe", "#c85b74", "#68ff57", "#b62347", "#994b91", "#646b8c"]);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20); 
+
+// set the ranges
+var x = d3.scaleTime().range([0, width]);
+var y0 = d3.scaleLinear().range([height, 0]);  // mean indicators
+var y1 = d3.scaleLinear().range([height, 0]);  // mean scores
+
+// define the line for indicators
+var valueline2 = d3.line()
+    // .curve(d3.curveNatural)
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y0(d.value); });
+
+// define the line for mean score
+var valueline1 = d3.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y1(d.score_mean); });
+
+var nestIndicators = d3.nest()
+    .key(function(d){
+      return d.label;
+    })
+    .entries(mean_indicators);
+
+// console.log('nestIndicators\n', nestIndicators);
+
+// Scale the range of the data
+x.domain(d3.extent(mean_scores, function(d) { return d.date; }));
+y0.domain([0, d3.max(mean_indicators, function(d) {return d.value; })]);
+y1.domain([0, d3.max(mean_scores, function(d) {return Math.max(d.score_mean);})]);
+
+
+
+
+// Add the valueline path.
+
+g3.append("g").append("path")
+    .data([mean_scores])
+    .attr("class", "line")
+    .style("stroke", "blue")
+    .attr("d", valueline1)
+    // .style("stroke-opacity", '.6') 
+   .style("stroke-dasharray", "10, 10");
+
+
+// Add the valueline pathes.
+g3.selectAll(".indicators-lines")
+    .data(nestIndicators)
+    .enter()
+    .append("path")
+        .attr("class", ".indicators-lines")
+        .attr("d", function(d){ return valueline2(d.values)})
+        .style("stroke", function(d,i) { return d.color = color(d.key); })
+        .style("stroke-width", 3)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)");
+
+
+// Add the X Axis
+g3.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m"))); //%b);
+
+// Add the Y0 Axis
+g3.append("g")
+    .attr("class", "axis--y1")
+    .call(d3.axisLeft(y0))
+    .append("text")
+      .attr("class", "axis-title")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -45)
+      .attr("dy", ".9em")
+      .style("text-anchor", "end") // label align
+      .attr("fill", "#5D6971")
+      .text("Mean indicators"); // y axis label
+
+// Add the Y1 Axis
+g3.append("g")
+    .attr("class", "axis--y2")
+    .attr("transform", "translate( " + width + ", 0 )")
+    .call(d3.axisRight(y1))
+    .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 35)
+        .attr("dy", ".9em")
+        .style("text-anchor", "end") // label align
+        .attr("fill", "blue")
+        .text("Mean score"); // y axis label
+
+// chart title
+g3.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")  
+    .style("font-size", "20px") 
+    // .style("text-decoration", "underline") 
+    .attr("fill", 'blue') 
+    .text("Mean values");
+
+// legend
+// var values_keys = Object.keys(mean_indicators[0]);
+// values_keys = values_keys.filter(word => word !== 'date');
+// console.log(values_keys);
+
+// Add legend
+var legend = g3.selectAll(".legend")
+    .data(nestIndicators, d => d.key)
+    .attr("id", d => 'legend' + d.key);
+
+// Add the Legend text
+legend.enter().append("text")
+    .attr("x", 50)
+    .attr("y", (d,i) => height + 47 + i*25)
+    .attr("class", "legend")
+    // .text(d => d.values[0].name);
+    .text(d => d.key);
+
+legend.enter().append("rect")
+    .attr("width", 15)
+    .attr("height", 15)
+    .attr("x", 20)
+    .attr("y", (d, i) => height + 35 + i*25 )  // spacing
+    .attr("fill", d => color(d.key))
+    .attr("class", (d,i) => "legendcheckbox " + d.key)
+    .attr("id", (d,i) => "legendRect" + d.key)
+
+// legend for score
+g3.append("line")
+    .attr("x1", width - 35)
+    .attr("x2", width)
+    .attr("y1", height + 35)
+    .attr("y2", height + 35)
+    .style("stroke-dasharray","5,5")
+    .style("stroke-width", 5)
+    .style("stroke", 'blue');
+
+g3.append("text")
+    .attr("x", width - 44)
+    .attr("y", height + 25)
+    .attr("dy", ".9em")
+    .style("text-anchor", "end")
+    .text("Mean score");
+
+
+// ------- Mouse tooltip -------
+
+var mouseG = g3.append("g")
+    .attr("class", "mouse-over-effects");
+
+mouseG.append("path") // this is the black vertical line to follow mouse
+    .attr("class", "mouse-line")
+    .style("stroke", "grey")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+var lines = document.getElementsByClassName('.indicators-lines');
+
+var mousePerLine = mouseG.selectAll('.mouse-per-line')
+    .data(nestIndicators)
+    .enter()
+    .append("g")
+    .attr("class", "mouse-per-line");
+
+mousePerLine.append("circle")
+    .attr("r", 7)
+    .style("stroke", function(d) {
+      return color(d.key);
+    })
+    .style("fill", "none")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+mousePerLine.append("text")
+    .attr("transform", "translate(10,3)");
+
+mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+    .attr('width', width) // can't catch mouse events on a g element
+    .attr('height', height)
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .on('mouseout', function() { // on mouse out hide line, circles and text
+      d3.select(".mouse-line")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-line circle")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-line text")
+        .style("opacity", "0");
+    })
+    .on('mouseover', function() { // on mouse in show line, circles and text
+      d3.select(".mouse-line")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-line circle")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-line text")
+        .style("opacity", "1");
+    })
+    .on('mousemove', function() { // mouse moving over canvas
+      var mouse = d3.mouse(this);
+      d3.select(".mouse-line")
+        .attr("d", function() {
+          var d = "M" + mouse[0] + "," + height;
+          d += " " + mouse[0] + "," + 0;
+          return d;
+        });
+
+      d3.selectAll(".mouse-per-line")
+        .attr("transform", function(d, i) {
+          // console.log(width/mouse[0])
+          var xDate = x.invert(mouse[0]),
+              bisect = d3.bisector(function(d) { return d.date; }).right;
+              idx = bisect(d.values, xDate);
+          
+          var beginning = 0,
+              end = lines[i].getTotalLength(),
+              target = null;
+
+          var line_coord_begin = lines[i].getPointAtLength(beginning);
+          var line_coord_end = lines[i].getPointAtLength(end);
+
+          d3.select(this).select('circle')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+            d3.select(this).select('text')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+          while (true){
+            target = Math.floor((beginning + end) / 2);
+            pos = lines[i].getPointAtLength(target);
+            if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                break;
+            }
+            if (pos.x > mouse[0])      end = target;
+            else if (pos.x < mouse[0]) beginning = target;
+            else break; //position found
+          }
+          
+          d3.select(this).select('text')
+            .text(y0.invert(pos.y).toFixed(3));
+            
+          return "translate(" + mouse[0] + "," + pos.y +")";
+        });
+    });
+
+
+// ----------- line tips -------------
+var linetooltip = d3.select("body").append("div")
+    .attr("class", "linetooltip")
+    .style("opacity", 0);
+
+// add the dots with tooltips
+g3.selectAll("dot")
+     .data(mean_scores)
+   .enter().append("circle")
+     .attr("r", 5)
+     .attr('fill', 'blue')
+     .attr("cx", function(d) { return x(d.date)})
+     .attr("cy", function(d) { return y1(d.score_mean); })
+     .on("mouseover", function(d) {
+       
+       linetooltip.transition()
+         .duration(200)
+         .style("opacity", .9);
+
+       linetooltip.html(formatTime(d.date) + "<br/>score: " + formatFloat(d.score_mean))
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 28) + "px");
+
+       })
+     .on("mouseout", function(d) {
+       linetooltip.transition()
+         .duration(500)
+         .style("opacity", 0);
+       });
+
+
+// ------------------------------ CHART 4 --------------------------------
+
+// set the dimensions and margins of the graph
+var svg = d3.select("#chart4");
+var margin = {top: 40, right: 50, bottom: 150, left: 50};
+var width = +svg.attr("width") - margin.left - margin.right;
+var height = +svg.attr("height") - margin.top - margin.bottom;
+
+var g4 = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")").attr("class", "chart4");
+
+// parse the date / time
+
+var formatFloat = d3.format(".2f");
+
+// var color = d3.scaleOrdinal()
+//     .domain(mean_indicators)
+//     .range(["#3957ff", "#d3fe14", "#c9080a", "#fec7f8", "#0b7b3e", "#0bf0e9", "#c203c8", "#fd9b39", "#888593", "#906407", "#98ba7f", "#fe6794", "#10b0ff", "#ac7bff", "#fee7c0", "#964c63", "#1da49c", "#0ad811", "#bbd9fd", "#fe6cfe", "#297192", "#d1a09c", "#78579e", "#81ffad", "#739400", "#ca6949", "#d9bf01", "#646a58", "#d5097e", "#bb73a9", "#ccf6e9", "#9cb4b6", "#b6a7d4", "#9e8c62", "#6e83c8", "#01af64", "#a71afd", "#cfe589", "#d4ccd1", "#fd4109", "#bf8f0e", "#2f786e", "#4ed1a5", "#d8bb7d", "#a54509", "#6a9276", "#a4777a", "#fc12c9", "#606f15", "#3cc4d9", "#f31c4e", "#73616f", "#f097c6", "#fc8772", "#92a6fe", "#875b44", "#699ab3", "#94bc19", "#7d5bf0", "#d24dfe", "#c85b74", "#68ff57", "#b62347", "#994b91", "#646b8c"]);
+
+var color = d3.scaleOrdinal(d3.schemeCategory20); 
+
+// set the ranges
+var x = d3.scaleLinear().range([0, width]);
+var y = d3.scaleLinear().range([height, 0]);  // mean indicators
+
+// define the line for indicators
+var valueline = d3.line()
+    // .curve(d3.curveNatural)
+    .x(function(d) { return x(d.score); })
+    .y(function(d) { return y(d.share); });
+
+var nestScoresShare = d3.nest()
+    .key(function(d){ return d.key; })
+    .entries(scores_share);
+
+// console.log('nestIndicators\n', nestIndicators);
+
+// Scale the range of the data
+x.domain(d3.extent(scores_share, function(d) { return d.score; }));
+y.domain([0, d3.max(scores_share, function(d) {return d.share; })]);
+
+
+
+// Add the valueline path.
+
+// Add the valueline pathes.
+g4.selectAll(".scores-share-lines")
+    .data(nestScoresShare)
+    .enter()
+    .append("path")
+        .attr("class", ".scores-share-lines")
+        .attr("d", function(d){ return valueline(d.values)})
+        .style("stroke", function(d,i) { return d.color = color(d.key); })
+        .style("stroke-width", 3)
+        .attr("id", d => 'tag'+d.key)
+        .attr("clip-path", "url(#clip)");
+
+// Add the X Axis
+g4.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).tickFormat(formatFloat))
+    .append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (margin.top) + ")")
+      .style("text-anchor", "middle")
+      .attr("fill", "#5D6971")
+      .text("Score")
+
+    ; //%b);
+
+// Add the Y Axis
+g4.append("g")
+    .attr("class", "axis--y1")
+    .call(d3.axisLeft(y))
+    .append("text")
+      .attr("class", "axis-title")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -45)
+      .attr("dy", ".9em")
+      .style("text-anchor", "end") // label align
+      .attr("fill", "#5D6971")
+      .text("Share %"); // y axis label
+
+// chart title
+g4.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")  
+    .style("font-size", "20px") 
+    // .style("text-decoration", "underline") 
+    .attr("fill", 'blue') 
+    .text("Scores share");
+
+// legend
+// var values_keys = Object.keys(mean_indicators[0]);
+// values_keys = values_keys.filter(word => word !== 'date');
+// console.log(values_keys);
+
+// Add legend
+var legend = g4.selectAll(".legend")
+    .data(nestScoresShare, d => d.key)
+    .attr("id", d => 'legend' + d.key);
+
+// Add the Legend text
+legend.enter().append("text")
+    .attr("x", 50)
+    .attr("y", (d,i) => height + 47 + i*25)
+    .attr("class", "legend")
+    // .text(d => d.values[0].name);
+    .text(d => d.key);
+
+legend.enter().append("rect")
+    .attr("width", 15)
+    .attr("height", 15)
+    .attr("x", 20)
+    .attr("y", (d, i) => height + 35 + i*25 )  // spacing
+    .attr("fill", d => color(d.key))
+    .attr("class", (d,i) => "legendcheckbox " + d.key)
+    .attr("id", (d,i) => "legendRect" + d.key)
+
+// ------- Mouse tooltip -------
+
+var mouseG4 = g4.append("g")
+    .attr("class", "mouse-over-effects");
+
+mouseG4.append("path") // this is the black vertical line to follow mouse
+    .attr("class", "mouse-line-share-lines")
+    .style("stroke", "grey")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+var lines4 = document.getElementsByClassName('.scores-share-lines');
+
+var mousePerLine = mouseG4.selectAll('.mouse-per-line-share-scores')
+    .data(nestScoresShare)
+    .enter()
+    .append("g")
+    .attr("class", "mouse-per-line-share-scores");
+
+mousePerLine.append("circle")
+    .attr("r", 7)
+    .style("stroke", function(d) {
+      return color(d.key);
+    })
+    .style("fill", "none")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+mousePerLine.append("text")
+    .attr("transform", "translate(10,3)");
+
+mouseG4.append('svg:rect') // append a rect to catch mouse movements on canvas
+    .attr('width', width) // can't catch mouse events on a g element
+    .attr('height', height)
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .on('mouseout', function() { // on mouse out hide line, circles and text
+      d3.select(".mouse-line-share-lines")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-line-share-scores circle")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-line-share-scores text")
+        .style("opacity", "0");
+    })
+    .on('mouseover', function() { // on mouse in show line, circles and text
+      d3.select(".mouse-line-share-lines")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-line-share-scores circle")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-line-share-scores text")
+        .style("opacity", "1");
+    })
+    .on('mousemove', function() { // mouse moving over canvas
+      var mouse = d3.mouse(this);
+      d3.select(".mouse-line-share-lines")
+        .attr("d", function() {
+          var d = "M" + mouse[0] + "," + height;
+          d += " " + mouse[0] + "," + 0;
+          return d;
+        });
+
+      d3.selectAll(".mouse-per-line-share-scores")
+        .attr("transform", function(d, i) {
+          // console.log(width/mouse[0])
+          var xScore = x.invert(mouse[0]),
+              bisect = d3.bisector(function(d) { return d.score; }).right;
+              idx = bisect(d.values, xScore);
+          
+          var beginning = 0,
+              end = lines4[i].getTotalLength(),
+              target = null;
+
+          var line_coord_begin = lines4[i].getPointAtLength(beginning);
+          var line_coord_end = lines4[i].getPointAtLength(end);
+
+          d3.select(this).select('circle')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+            d3.select(this).select('text')
+              .style("opacity", function(d) { return (mouse[0] >= line_coord_begin.x && mouse[0] <= line_coord_end.x  ? "1" : "0"); })
+
+          while (true){
+            target = Math.floor((beginning + end) / 2);
+            pos = lines4[i].getPointAtLength(target);
+            if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                break;
+            }
+            if (pos.x > mouse[0])      end = target;
+            else if (pos.x < mouse[0]) beginning = target;
+            else break; //position found
+          }
+          
+          d3.select(this).select('text')
+            .text(y.invert(pos.y).toFixed(3));
+            
+          return "translate(" + mouse[0] + "," + pos.y +")";
+        });
+    });
+
+
+// ------------------------------ HELP FUNCTIONS ----------------------------------
+
+//Divides date for tooltip placement
+var bisectDate = d3.bisector(function(d) { return d.date; }).left;
+
+// line tooltip
+function mousemove1() {
+
+    var domain = xScale.domain()
+    var range = xScale.range()
+    var scale = d3.scaleQuantize().domain(range).range(domain) 
+    var x0 = scale(d3.mouse(this)[0]), // convert x coordinate of the mouse to date using x-scaling
+    
+    i = bisectDate(gini, x0, 1), // check index of hover date
+    d0 = gini[i - 1],
+    d1 = gini[i],
+    d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+    focusline.attr("transform", "translate(" + (xScale(d.date) + xScale.bandwidth()/2) + "," + yScale2(d.value) + ")");
+    focusline.select("text").text(function() { return d.value; }); // focus value
+}
+
+function mousemove2() {
+
+    var domain = xScale.domain()
+    var range = xScale.range()
+    var scale = d3.scaleQuantize().domain(range).range(domain) 
+    var x0 = scale(d3.mouse(this)[0]), // convert x coordinate of the mouse to date using x-scaling
+    
+    i = bisectDate(gini, x0, 1), // check index of hover date
+    d0 = scores[i - 1],
+    d1 = scores[i],
+    d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+    focusline.attr("transform", "translate(" + (xScale(d.date) + xScale.bandwidth()/2) + "," + yScale2(d.value) + ")");
+    focusline.select("text").text(function() { return d.value; }); // focus value
+}
+
+function merge_array(array1, array2) {
+    const result_array = [];
+    const arr = array1.concat(array2);
+    let len = arr.length;
+    const assoc = {};
+
+    while(len--) {
+        const item = arr[len];
+
+        if(!assoc[item]) 
+        { 
+            result_array.unshift(item);
+            assoc[item] = true;
+        }
+    }
+
+    return result_array;
+}
+
+
+
+// --------------------------------------------------------------------------------------------
+
+// //Circle Data Set
+// var circleData = [
+//   { "cx": 20, "cy": 120, "radius": 20, "color" : "green" },
+//   { "cx": 70, "cy": 170, "radius": 20, "color" : "purple" }];
+
+// //Create the SVG Viewport
+// var svg = d3.select("#chart4").append("svg")
+//                                      .attr("width",200)
+//                                      .attr("height",200);
+
+// //Add circles to the svgContainer
+// var circles = svg.selectAll("circle")
+//                            .data(circleData)
+//                            .enter()
+//                            .append("circle");
+
+// //Add the circle attributes
+// var circleAttributes = circles
+//                        .attr("cx", function (d) { return d.cx; })
+//                        .attr("cy", function (d) { return d.cy; })
+//                        .attr("r", function (d) { return d.radius; })
+//                        .style("fill", function (d) { return d.color; });
+
+
+</script>
+
+<style>
+  
+  .even {
+    background-color: #E4DFEC;
+  }
+
+  .odd {
+    background-color: #FDE9D9;
+  }
+
+  .dataframe th {
+    background-color: white;
+  }
+
+  center {
+    width: 100%
+  }
+
+  div.variables {
+    display: inline-block;
+    /*width: 30%;*/
+    margin: 5px;
+  }
+  
+</style>
+
+<script type="text/javascript">
+
+  // color rows
+  $(".dataframe tr").each(function(index) {
+    
+    if (index > -1) {
+      var item = $("td:first", this).text();
+      var prev = $(this).prev();
+
+      if (prev.length > 0) {
+        var prevItem = prev.find('td:first').text();
+
+        if (prevItem == item) {
+          if (prev.hasClass('odd'))
+            $(this).addClass("odd");
+          else
+            $(this).addClass("even");
+        } else {
+          if (prev.hasClass('even'))
+            $(this).addClass("odd");
+          else
+            $(this).addClass("even");
+        }
+      } else
+        $(this).addClass("odd");
+
+    }
+  });
+
+  // color values that are less than 0.05
+  $('.dataframe td').each(function() {
+      
+      var num = parseFloat($(this).text());
+      
+      if(($(this).index() > 3) && ($(this).index() < 6)) {
+        if (num >= 0.05) {
+            // $(this).addClass('success');
+            // $(this).css('color','Green');
+        } else if (num < 0.05) {
+            // $(this).addClass('danger');
+            $(this).css('color','Red');
+        }
+      }
+  });
+
+</script>
+
+{% endif %}
+
+{% endblock %}

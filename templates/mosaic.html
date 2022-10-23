@@ -1,0 +1,113 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+    <!----------------------------------- KOALA ------------------------------------->
+
+
+          <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+          <script type="text/javascript" src="{% static 'koala/polyfill/polyfill.js' %}"></script>
+     <!--      <script type="text/javascript" src="{% static 'koala/polyfill/Blob.js' %}"></script>
+          <script type="text/javascript" src="{% static 'koala/polyfill/FileSaver.js' %}"></script> -->
+          <script type="text/javascript" src="{% static 'koala/koala.js' %}"></script>
+          <script type="text/javascript" src="{% static 'js/d3.v3.js' %}"></script>
+
+          <center style="margin-top: 50px;">
+            <div id="dots"></div>
+
+          </center>
+
+    <script type="text/javascript">
+      // Code left intentionally unminimized for your reading pleasure.
+
+      (function() {
+        window.shownFile = 'none';
+
+        // Try you must. If there is an error report it to me.
+        try {
+
+          function basicLoad(location) {
+            // var possible = ['koalas', 'koalas1', 'koalas2', 'koalas3'];
+            // var file = "{% static 'koala/img/' %}" + possible[Math.floor(Math.random() * possible.length)] + ".jpg";
+            var file = "{% static 'koala/img/mig.jpg' %}";
+            return {
+              file: file,
+              shownFile: location.protocol + '//' + location.host + location.pathname + file
+            };
+          }
+
+          var parse = basicLoad(location);
+          if (!parse) return;
+          var file = parse.file;
+          window.shownFile = parse.shownFile;
+
+          if (parse.background) {
+            d3.select(document.body)
+              .style('background', parse.background);
+          }
+        
+          function onEvent(what, value) {
+    
+            if (what === 'LayerClear' && value == 0) {
+              d3.select('#next')
+                .style('display', null)
+                .select('input')
+                  .on('keydown', function() {
+                    d3.select('div.err').remove();
+                    if (d3.event.keyCode !== 13) return;
+                    var input = d3.select(this).property('value');
+
+                  });
+            }
+          }
+
+          var img = new Image();
+          img.onload = function() {
+            var colorData;
+            try {
+              colorData = koala.loadImage(this);
+            } catch (e) {
+              colorData = null;
+              track('BadLoad', "Msg: '" + e.message + "' file: '" + file + "'");
+              alert("Sorry, KoalsToTheMax could not load the image '" + file + "'");
+              setTimeout(function() {
+                window.location.href = domian;
+              }, 750);
+            }
+            if (colorData) {
+              koala.makeCircles("#dots", colorData, onEvent);
+              // track('GoodLoad', 'Yay');
+            }
+          };
+          img.src = file;
+        } catch (e) {
+          track('Problemo', String(e.message));
+        }
+
+        // // Local download functionality
+        // var saveNumber = 0;
+        // d3.select('#love').on('click', function() {
+        //   saveNumber++;
+        //   track('SaveSVG', saveNumber);
+        //   svgData = d3.select('#dots').html();
+        //   if (svgData.indexOf('<svg') !== -1) {
+        //     prefix = [
+        //       '<?xml version="1.0" encoding="utf-8"?>',
+        //       '<!-- Generator: KoalasToTheMax.com -->',
+        //       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'
+        //     ];
+        //     saveAs(new Blob(
+        //       [svgData.replace('<svg', prefix.join(' ') + '<svg')],
+        //       {type: "text/plain;charset=utf-8"}
+        //     ), "KoalasToTheMax.svg");
+        //   } else {
+        //     track('SaveSVG', 'Fail');
+        //   }
+        // });
+
+      })();
+    </script>
+
+
+
+     <!--------------------- END KOALA ------------------------------>
+
+
+{% endblock %}

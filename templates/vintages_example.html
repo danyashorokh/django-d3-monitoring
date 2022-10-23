@@ -1,0 +1,124 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+    <style>
+
+
+		.line {
+			fill: none;
+			stroke: #EF5285;
+			stroke-width: 2px;
+		}
+
+    </style>
+
+    <script type="text/javascript" src="{% static 'js/d3.v4.js' %}"></script>
+
+    <!-- {{ data | safe }} -->
+
+    <script>
+
+    // Parse the month variable
+	var parseMonth = d3.timeParse("%b");
+	var formatMonth = d3.timeFormat("%b");
+	
+	var data = [
+
+		{'Month': 'Jan', 'Sales': 50, 'Fruit': 'strawberry'},
+		{'Month': 'Feb', 'Sales': 24, 'Fruit': 'strawberry'},
+		{'Month': 'Mar', 'Sales': 37, 'Fruit': 'strawberry'},
+		{'Month': 'Jan', 'Sales': 30, 'Fruit': 'apple'},
+		{'Month': 'Feb', 'Sales': 24, 'Fruit': 'apple'},
+		{'Month': 'Mar', 'Sales': 36, 'Fruit': 'apple'},
+	
+	];
+
+	// Format the data
+	  data.forEach(function(d) {
+	      d.Month = parseMonth(d.Month);
+	      d.Sales = +d.Sales;
+	      d.Fruit = d.Fruit;
+	  });
+
+	console.log(data);
+
+	// Set the margins
+	var margin = {top: 60, right: 100, bottom: 20, left: 80},
+	  width = 850 - margin.left - margin.right,
+	  height = 370 - margin.top - margin.bottom;
+
+	// Set the ranges
+	var x = d3.scaleTime().domain([parseMonth("Jan"),parseMonth("Dec")]).range([0, width]);
+	var y = d3.scaleLinear().range([height, 0]);
+
+	// Define the line
+	var valueLine = d3.line()
+	    .x(function(d) { return x(d.Month); })
+	    .y(function(d) { return y(+d.Sales); })
+
+
+	// append the svg obgect to the body of the page
+	// appends a 'group' element to 'svg'
+	// moves the 'group' element to the top left margin
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	    .attr("transform",
+	          "translate(" + margin.left + "," + margin.top + ")")
+	    .attr("class", "svg");
+
+
+
+	var nest = d3.nest()
+	  .key(function(d){
+	    return d.Fruit;
+	  })
+	  .entries(data);
+
+  // Scale the range of the data
+  x.domain(d3.extent(data, function(d) { return d.Month; }));
+  y.domain([0, d3.max(data, function(d) { return d.Sales; })]);
+  
+  // Set up the x axis
+  var xaxis = svg.append("g")
+       .attr("transform", "translate(0," + height + ")")
+       .attr("class", "x axis")
+       .call(d3.axisBottom(x)
+          .ticks(d3.timeMonth)
+          .tickSize(0, 0)
+          .tickFormat(d3.timeFormat("%B"))
+          .tickSizeInner(0)
+          .tickPadding(10));
+
+  // Add the Y Axis
+   var yaxis = svg.append("g")
+       .attr("class", "y axis")
+       .call(d3.axisLeft(y)
+          .ticks(5)
+          .tickSizeInner(0)
+          .tickPadding(6)
+          .tickSize(0, 0));
+
+ // yaxis.select(".domain").style("display","none")
+  
+  // Add a label to the y axis
+  svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - 60)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Monthly Sales")
+        .attr("class", "y axis label");
+  
+  // Draw the line
+  svg.selectAll(".line")
+      .data(nest)
+      .enter()
+      .append("path")
+	      .attr("class", "line")
+	      .attr("d", function(d){
+	      	return valueLine(d.values)});
+
+   </script>
+
+{% endblock %}

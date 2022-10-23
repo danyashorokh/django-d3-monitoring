@@ -1,0 +1,256 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+
+
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <!-- <script src="http://d3js.org/d3.v3.min.js" language="JavaScript"></script> -->
+    <!-- <script src="liquidFillGauge.js" language="JavaScript"></script> -->
+    <script type="text/javascript" src="{% static 'js/d3.v3.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/liquidFillGauge.js' %}"></script>
+    <style>
+        .liquidFillGaugeText { font-family: Helvetica; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<style>
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+.inner {
+    margin:10pt;
+    /*padding:10pt;*/
+/*    border:2px solid red;
+    border-radius:4pt;*/
+    width:20%;
+    height:300px;
+    display:inline-block;
+    vertical-align: middle;
+}
+
+p.rg{
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 25px;
+}
+
+p.label {
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 30px;
+}
+
+p.label:nth-child(n+2) {
+    margin-top: 150px;
+}
+
+p.limit{
+    color: rgb(23, 139, 202);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 20px;
+}
+
+
+</style>
+
+<script>
+
+    var gauges = [];
+
+    function NewValue() {
+        if(Math.random() > .5) {
+            return Math.round(Math.random()*100);
+        } else {
+            return (Math.random()*100).toFixed(1);
+        }
+    }
+</script>
+
+
+<div class="outer">
+    {% for segment in segments %}
+        <!-- <p class='label' style=''>{{ segment.label }}</p> -->
+        <p class='label' style=''>{{ segment.business_type }} {{ segment.client_type }} (ExecutionKey = {{ segment.execution_key }})</p>
+        <div class="inner">
+            <p class='rg'>A</p>
+            <p class='limit'>Limit: {{ segment.limit_a}}</p>
+            <svg id="{{ segment.label }}_a" height="250" onclick="gauges[{{ forloop.counter0 }}*4].update(NewValue()); console.log({{ forloop.counter0 }});"></svg>
+        </div>
+        <div class="inner">
+            <p class='rg'>B</p>
+            <p class='limit'>Limit: {{ segment.limit_b}}</p>
+            <svg id="{{ segment.label }}_b" height="250" onclick=""></svg>
+        </div>
+        <div class="inner">
+            <p class='rg'>C</p>
+            <p class='limit'>Limit: {{ segment.limit_c}}</p>
+            <svg id="{{ segment.label }}_c" height="250" onclick=""></svg>
+        </div>
+        <div class="inner">
+            <p class='rg'>D</p>
+            <p class='limit'>Limit: {{ segment.limit_d}}</p>
+            <svg id="{{ segment.label }}_d" height="250" onclick=""></svg>
+        </div>
+
+        <script>
+            var config = liquidFillGaugeDefaultSettings();
+            config.waveAnimateTime = 4000;
+            gauges.push(loadLiquidFillGauge("{{ segment.label }}_a", {{ segment.share_a }}, config));
+            gauges.push(loadLiquidFillGauge("{{ segment.label }}_b", {{ segment.share_b }}, config));
+            gauges.push(loadLiquidFillGauge("{{ segment.label }}_c", {{ segment.share_c }}, config));
+            gauges.push(loadLiquidFillGauge("{{ segment.label }}_d", {{ segment.share_d }}, config));
+            // loadLiquidFillGauge("{{ segment.label }}_a", {{ segment.share_a }}, config);
+            // loadLiquidFillGauge("{{ segment.label }}_b", {{ segment.share_b }}, config);
+            // loadLiquidFillGauge("{{ segment.label }}_c", {{ segment.share_c }}, config);
+            // loadLiquidFillGauge("{{ segment.label }}_d", {{ segment.share_d }}, config);
+        </script>
+
+    {% endfor %}
+
+
+    <script type="text/javascript">   
+
+        console.log(gauges);
+
+    </script>
+</div>
+
+<!-- <div class="outer">
+     <div class="inner">
+        <p>A</p>
+        <svg id="fillgauge1" height="250" onclick="gauge1.update(NewValue());"></svg>
+    </div>
+
+     <div class="inner">
+        <p>B</p>
+        <svg id="fillgauge2" height="250" onclick=""></svg>
+    </div>
+
+    <div class="inner">
+        <p>C</p>
+        <svg id="fillgauge3" height="250" onclick=""></svg>
+    </div>
+
+    <div class="inner">
+        <p>D</p>
+        <svg id="fillgauge4" height="250" onclick=""></svg>
+    </div>
+</div> -->
+
+
+<!-- 
+<svg id="fillgauge1" width="97%" height="250" onclick="gauge1.update(NewValue());"></svg>
+<svg id="fillgauge2" width="19%" height="200" onclick="gauge2.update(NewValue());"></svg>
+<svg id="fillgauge3" width="19%" height="200" onclick="gauge3.update(NewValue());"></svg>
+<svg id="fillgauge4" width="19%" height="200" onclick="gauge4.update(NewValue());"></svg>
+<svg id="fillgauge5" width="19%" height="200" onclick="gauge5.update(NewValue());"></svg>
+<svg id="fillgauge6" width="19%" height="200" onclick="gauge6.update(NewValue());"></svg>
+ -->
+<script>
+
+    // var data = JSON.parse('{{ json_data | escapejs }}');
+// 
+    // console.log(data);
+
+    // var config = liquidFillGaugeDefaultSettings();
+    // config.waveAnimateTime = 4000;
+ 
+    // var gauge1 = loadLiquidFillGauge("fillgauge1", data[0].share_a, config);
+    // var gauge2 = loadLiquidFillGauge("fillgauge2", data[0].share_b, config);
+    // var gauge3 = loadLiquidFillGauge("fillgauge3", data[0].share_c, config);
+    // var gauge4 = loadLiquidFillGauge("fillgauge4", data[0].share_d, config);
+
+    // for (i = 0; i < data.length; i++) {
+    //     console.log(data[i].label, data[i].share_a)
+    //     d3.select(".outer").
+    //         append('div').
+    //             attr('class', 'inner')
+    //         append('div').
+    //             attr('class', 'inner');
+
+    // }
+
+    // var gauge1 = loadLiquidFillGauge("fillgauge1", 55);
+    
+    // var config1 = liquidFillGaugeDefaultSettings();
+    // config1.circleColor = "#FF7777";
+    // config1.textColor = "#FF4444";
+    // config1.waveTextColor = "#FFAAAA";
+    // config1.waveColor = "#FFDDDD";
+    // config1.circleThickness = 0.2;
+    // config1.textVertPosition = 0.2;
+    // config1.waveAnimateTime = 1000;
+    // var gauge2= loadLiquidFillGauge("fillgauge2", 28, config1);
+
+    // var config2 = liquidFillGaugeDefaultSettings();
+    // config2.circleColor = "#D4AB6A";
+    // config2.textColor = "#553300";
+    // config2.waveTextColor = "#805615";
+    // config2.waveColor = "#AA7D39";
+    // config2.circleThickness = 0.1;
+    // config2.circleFillGap = 0.2;
+    // config2.textVertPosition = 0.8;
+    // config2.waveAnimateTime = 2000;
+    // config2.waveHeight = 0.3;
+    // config2.waveCount = 1;
+    // var gauge3 = loadLiquidFillGauge("fillgauge3", 60.1, config2);
+
+    // var config3 = liquidFillGaugeDefaultSettings();
+    // config3.textVertPosition = 0.8;
+    // config3.waveAnimateTime = 5000;
+    // config3.waveHeight = 0.15;
+    // config3.waveAnimate = false;
+    // config3.waveOffset = 0.25;
+    // config3.valueCountUp = false;
+    // config3.displayPercent = false;
+    // var gauge4 = loadLiquidFillGauge("fillgauge4", 50, config3);
+
+    // var config4 = liquidFillGaugeDefaultSettings();
+    // config4.circleThickness = 0.15;
+    // config4.circleColor = "#808015";
+    // config4.textColor = "#555500";
+    // config4.waveTextColor = "#FFFFAA";
+    // config4.waveColor = "#AAAA39";
+    // config4.textVertPosition = 0.8;
+    // config4.waveAnimateTime = 1000;
+    // config4.waveHeight = 0.05;
+    // config4.waveAnimate = true;
+    // config4.waveRise = false;
+    // config4.waveHeightScaling = false;
+    // config4.waveOffset = 0.25;
+    // config4.textSize = 0.75;
+    // config4.waveCount = 3;
+    // var gauge5 = loadLiquidFillGauge("fillgauge5", 60.44, config4);
+
+    // var config5 = liquidFillGaugeDefaultSettings();
+    // config5.circleThickness = 0.4;
+    // config5.circleColor = "#6DA398";
+    // config5.textColor = "#0E5144";
+    // config5.waveTextColor = "#6DA398";
+    // config5.waveColor = "#246D5F";
+    // config5.textVertPosition = 0.52;
+    // config5.waveAnimateTime = 5000;
+    // config5.waveHeight = 0;
+    // config5.waveAnimate = false;
+    // config5.waveCount = 2;
+    // config5.waveOffset = 0.25;
+    // config5.textSize = 1.2;
+    // config5.minValue = 30;
+    // config5.maxValue = 150
+    // config5.displayPercent = false;
+    // var gauge6 = loadLiquidFillGauge("fillgauge6", 120, config5);
+
+    
+
+</script>
+</body>
+</html>
+
+
+{% endblock %}

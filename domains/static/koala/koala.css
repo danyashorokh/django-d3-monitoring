@@ -1,0 +1,73 @@
+
+div {
+  cursor: inherit;
+}
+
+.outer {
+    text-align:center;
+    /*border:2px solid gray;*/
+    padding:10pt;
+}
+.inner {
+    margin: auto;
+    /*margin-top: 30pt;*/
+    padding:10pt;
+    /*border:2px solid red;*/
+    border-radius:4pt;
+    width:80%;
+    height:450px;
+    display: block;
+    vertical-align: middle;
+}
+
+
+
+
+#center {
+  position: relative;
+  height: 100%;
+  width: 512px;
+  margin: 0 auto;
+  top: 200px;
+}
+
+#cont {
+  position: absolute;
+  top: 50%;
+  margin-top: -270px;
+  margin-top: 250px;
+  width:  512px;
+  height: 512px;
+}
+
+#dot {
+  width:  512px;
+  height: 512px;
+}
+
+svg,
+circle {
+  pointer-events: none;
+}
+
+/*
+#next {
+  padding-top: 30px;
+}
+
+#next input {
+  width: 480px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+#next .err {
+  color: red;
+}
+*/
+
+div.not-found {
+  text-align: center;
+  margin-top: 200px;
+  font-size: 32px;
+}

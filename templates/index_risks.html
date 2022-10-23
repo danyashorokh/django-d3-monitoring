@@ -1,0 +1,92 @@
+{% extends 'index.html' %} {% load staticfiles %} {% block content %}
+    <style>
+
+    body {
+      /*font-family:'Open Sans', sans-serif;
+      font-weight: 300;
+      font-size: 16pt;*/
+    }
+
+    a {
+      color: #FFF;
+      text-decoration: none;
+    }
+    .menu {
+      width: 800px;
+      margin: 30px auto;
+    }
+    .menu a {
+      width: 250px;
+      line-height: 180px;
+      /*height: 180px;*/
+      display: block;
+      margin: 4px;
+      text-align: center;
+      font-size: 14pt;
+      float:left;
+      opacity: 1;
+      word-wrap: break-word;
+      /*vertical-align: middle;*/
+    }
+
+    .menu a.text {
+      vertical-align: middle;
+    }
+
+    .yellow { background: #fdd22a; }
+    .blue { background: #009fe3; }
+    .purple { background: #574696; }
+    .orange { background: #ee7202; }
+    .pink { background: #e61c67; }
+    .green { background: #96c11f; }
+
+    </style>
+
+    <script type="text/javascript" src="{% static 'js/jquery.min.js' %}"></script>
+
+    <div class="menu">
+      <!-- <a class="yellow" href="/risks/open_now/">Open now</a> -->
+      <!-- <a class="orange" href="/risks/open_now_new_repeat/">Open now v.2</a> -->
+      <a class="orange" href="/risks/open_now_sql/">Open now sql</a>
+      <!-- <a class="green" href="/risks/scorecard_monitoring/">Scorecard monitoring</a> -->
+      <a class="green" href="/risks/scorecard_monitoring_new/">Scorecard monitoring</a>
+      <a class="yellow" href="/risks/vintages/">Vintages</a>
+      <a class="purple" href="/risks/scorecard_gantt/">Gantt</a>
+      
+      <a class="orange" href="/risks/gini_badrate/">Gini's by badrate</a>
+      <a class="pink" href="/risks/graph_contacts/">Contacts graph</a>
+      <!-- <a class="yellow" href="/risks/one_scorecard_counts/">Scorecard counts</a> -->
+      <a class="pink" href="/risks/monthly_report/">Monthly report</a>
+      <!-- <a class="purple" href="/risks/portfolio_new/">Portfolio new</a> -->
+      <!-- <a class="green" href="/risks/month/">Scorecards last month</a> -->
+      <a class="blue" href="/risks/financed_sankey/">Financed sankey</a>
+      <a class="green" href="/risks/entrance_sankey/">Entrance channel sankey</a>
+      <!-- <a class="orange" href="/risks/stage_sankey/">Stage sankey</a> -->
+
+<!--       <a class="orange" href="/risks/stage_sankey/digital">Stage sankey digital</a>
+      <a class="orange" href="/risks/stage_sankey/core">Stage sankey core</a>
+      <a class="orange" href="/risks/stage_sankey/migone">Stage sankey migone</a>
+      <a class="orange" href="/risks/stage_sankey/all">Stage sankey all</a> -->
+
+      <a class="orange" href="/risks/stage_sankey/">Stage sankey</a>
+
+    </div>
+
+  <script type="text/javascript">
+    
+    $(document).ready(function() {
+      $('.menu a').hover(function() {
+        $(this).stop().animate({
+          opacity: 0.5
+        }, 300);
+      }, function() {
+        $(this).stop().animate({
+          opacity: 1
+        }, 300);
+      });
+    });
+
+  </script>
+
+
+{% endblock %}
